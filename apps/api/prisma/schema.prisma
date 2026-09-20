@@ -1,0 +1,106 @@
+// Prisma Schema for MMedic System (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  NURSE
+  PATIENT
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  role         Role          @default(DOCTOR)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  doctorAppointments Appointment[]   @relation("DoctorAppointments")
+  medicalRecords     MedicalRecord[] @relation("DoctorRecords")
+
+  @@map("users")
+}
+
+model Patient {
+  id          String        @id @default(uuid())
+  dni         String        @unique
+  firstName   String
+  lastName    String
+  birthDate   DateTime
+  gender      Gender        @default(OTHER)
+  phone       String?
+  email       String?
+  bloodType   String?
+  allergies   String[]      @default([])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  appointments   Appointment[]
+  medicalRecords MedicalRecord[]
+
+  @@map("patients")
+}
+
+model Appointment {
+  id        String            @id @default(uuid())
+  dateTime  DateTime
+  status    AppointmentStatus @default(PENDING)
+  reason    String
+  notes     String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId String
+  doctor   User   @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Restrict)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([dateTime])
+  @@map("appointments")
+}
+
+model MedicalRecord {
+  id          String   @id @default(uuid())
+  diagnosis   String
+  treatment   String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId String
+  doctor   User   @relation("DoctorRecords", fields: [doctorId], references: [id], onDelete: Restrict)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@map("medical_records")
+}
