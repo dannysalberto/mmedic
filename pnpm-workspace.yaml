@@ -8,3 +8,6 @@ allowBuilds:
   '@scarf/scarf': false
   prisma: true
   esbuild: true
+  '@parcel/watcher': true
+  lmdb: true
+  msgpackr-extract: true

@@ -9,7 +9,7 @@ Monorepo integral para el sistema médico **MMedic**, diseñado para operar de m
 ```
 MMedic/
 ├── apps/
-│   ├── web/         # Frontend Web moderno con Next.js 15, React 19 y App Router
+│   ├── web/         # Frontend Web con Angular 19 (Standalone, Signals, Reactive Forms)
 │   ├── api/         # Backend REST con NestJS 11, Prisma ORM 6 y Swagger OpenAPI
 │   └── android/     # Aplicación nativa Android en Kotlin con Jetpack Compose y Retrofit
 │
@@ -87,7 +87,7 @@ pnpm dev:web
 
 | Servicio | URL Local | Descripción |
 |---|---|---|
-| **Web Portal** | [http://localhost:3001](http://localhost:3001) | Dashboard clínico Next.js 15 |
+| **Web Portal** | [http://localhost:3001](http://localhost:3001) | Dashboard clínico Angular 19 |
 | **API REST** | [http://localhost:3000/api/v1](http://localhost:3000/api/v1) | Endpoint base de NestJS |
 | **Swagger Docs** | [http://localhost:3000/api/docs](http://localhost:3000/api/docs) | Documentación interactiva de la API |
 | **Prisma Studio** | `pnpm db:studio` -> [http://localhost:5555](http://localhost:5555) | Explorador visual de datos de Prisma |

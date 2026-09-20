@@ -1,0 +1,135 @@
+<div class="container">
+  <!-- Header -->
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 0; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 0.875rem;">
+      <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #dd0031, #c3002f); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(221, 0, 49, 0.4); font-weight: 900; font-size: 1.2rem; color: white;">
+        A
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.025em;">
+            MMedic <span style="color: var(--accent-cyan)">Platform</span>
+          </h1>
+          <span class="badge badge-info">Angular 19 + NestJS</span>
+        </div>
+        <p style="font-size: 0.875rem; color: var(--text-secondary);">
+          Ecosistema Clínico Unificado: Web (Angular 19) · Backend (NestJS + Prisma) · Android (Kotlin)
+        </p>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <a href="http://localhost:3000/api/docs" target="_blank" rel="noreferrer" class="btn btn-secondary">
+        Swagger API
+      </a>
+      <a href="http://localhost:8080" target="_blank" rel="noreferrer" class="btn btn-secondary">
+        Adminer DB
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <span class="badge badge-success">Frontend Migrado a Angular 19</span>
+          <span class="badge badge-info">PostgreSQL 16 + Prisma</span>
+        </div>
+        <h2 style="font-size: 1.875rem; font-weight: 800;">
+          Bienvenido al Sistema MMedic
+        </h2>
+        <p style="color: var(--text-secondary); max-width: 680px; margin-top: 0.5rem;">
+          Arquitectura empresarial desacoplada. El frontend en Angular 19 utiliza Signals y Standalone Components, consumiendo el backend NestJS y compartiendo tipos con la aplicación Android nativa.
+        </p>
+      </div>
+
+      <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem 1.25rem; min-width: 280px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">ESTADO DE SERVICIOS</span>
+          <div style="display: flex; align-items: center; gap: 0.375rem;">
+            <span class="pulse-dot" [style.background]="health() ? 'var(--accent-emerald)' : 'var(--accent-amber)'"></span>
+            <span style="font-size: 0.75rem; font-weight: 600;" [style.color]="health() ? 'var(--accent-emerald)' : 'var(--accent-amber)'">
+              @if (loading()) {
+                Verificando...
+              } @else if (health()) {
+                API Online
+              } @else {
+                API Offline
+              }
+            </span>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8125rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">NestJS API (Puerto 3000):</span>
+            <span style="font-weight: 600;" [style.color]="health()?.status === 'ok' ? '#34d399' : '#f87171'">
+              {{ health()?.status === 'ok' ? 'Activo' : 'Offline' }}
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">PostgreSQL (Puerto 5432):</span>
+            <span style="font-weight: 600;" [style.color]="health()?.database === 'connected' ? '#34d399' : '#fbbf24'">
+              {{ health()?.database === 'connected' ? 'Conectado' : 'Pendiente (pnpm db:up)' }}
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary);">Web Client:</span>
+            <span style="font-weight: 600; color: #dd0031;">Angular 19 (Puerto 3001)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Architecture Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+    <div class="glass-card" style="padding: 1.5rem;">
+      <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Módulo Web</span>
+      <div style="font-size: 1.75rem; font-weight: 800; margin: 0.35rem 0; color: #dd0031;">Angular 19</div>
+      <p style="font-size: 0.8125rem; color: var(--text-secondary);">Signals, Standalone & Reactive Forms</p>
+    </div>
+
+    <div class="glass-card" style="padding: 1.5rem;">
+      <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Módulo API</span>
+      <div style="font-size: 1.75rem; font-weight: 800; margin: 0.35rem 0; color: #a78bfa;">NestJS 11</div>
+      <p style="font-size: 0.8125rem; color: var(--text-secondary);">TypeScript, Swagger & Prisma ORM</p>
+    </div>
+
+    <div class="glass-card" style="padding: 1.5rem;">
+      <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Módulo Móvil</span>
+      <div style="font-size: 1.75rem; font-weight: 800; margin: 0.35rem 0; color: #34d399;">Android Kotlin</div>
+      <p style="font-size: 0.8125rem; color: var(--text-secondary);">Jetpack Compose & Retrofit</p>
+    </div>
+
+    <div class="glass-card" style="padding: 1.5rem;">
+      <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Base de Datos</span>
+      <div style="font-size: 1.75rem; font-weight: 800; margin: 0.35rem 0; color: #fbbf24;">PostgreSQL 16</div>
+      <p style="font-size: 0.8125rem; color: var(--text-secondary);">Docker Compose & Adminer</p>
+    </div>
+  </div>
+
+  <!-- Terminal Commands -->
+  <div class="glass-card" style="padding: 1.75rem; margin-top: 1.5rem;">
+    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Comandos Rápidos</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; font-size: 0.85rem;">
+      <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 8px;">
+        <span style="color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Levantar PostgreSQL:</span>
+        <code style="color: #38bdf8;">pnpm db:up</code>
+      </div>
+      <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 8px;">
+        <span style="color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Iniciar Web y API:</span>
+        <code style="color: #34d399;">pnpm dev</code>
+      </div>
+      <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 8px;">
+        <span style="color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Iniciar solo Web (Angular):</span>
+        <code style="color: #dd0031;">pnpm dev:web</code>
+      </div>
+      <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 8px;">
+        <span style="color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Compilar todo el Monorepo:</span>
+        <code style="color: #fbbf24;">pnpm build</code>
+      </div>
+    </div>
+  </div>
+</div>
