@@ -1,19 +1,21 @@
-// Prisma Schema for MMedic System (PostgreSQL)
+// Prisma Schema for MMedic System (PostgreSQL on Supabase)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
-  ADMIN
-  DOCTOR
-  NURSE
-  PATIENT
+  ROL_SUPERADMIN
+  ROL_ADMIN
+  ROL_MEDICO
+  ROL_CAJERO
+  ROL_GERENCIA
 }
 
 enum AppointmentStatus {
@@ -30,43 +32,115 @@ enum Gender {
   OTHER
 }
 
+model Tenant {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          User[]
+  patients       Patient[]
+  appointments   Appointment[]
+  medicalRecords MedicalRecord[]
+
+  @@map("tenants")
+}
+
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  username     String   @unique
+  email        String   @unique
   passwordHash String
-  name         String
-  role         Role          @default(DOCTOR)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  fullName     String
+  name         String?
+  role         Role     @default(ROL_MEDICO)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  doctorAppointments Appointment[]   @relation("DoctorAppointments")
-  medicalRecords     MedicalRecord[] @relation("DoctorRecords")
+  specialPermissions UserSpecialPermission[]
+  doctorAppointments Appointment[]           @relation("DoctorAppointments")
+  medicalRecords     MedicalRecord[]         @relation("DoctorRecords")
 
+  @@index([tenantId])
   @@map("users")
 }
 
+model SpecialPermission {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String
+  module      String
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  userAssignments UserSpecialPermission[]
+
+  @@map("special_permissions")
+}
+
+model UserSpecialPermission {
+  id           String            @id @default(uuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   SpecialPermission @relation(fields: [permissionId], references: [id], onDelete: Restrict)
+  grantedBy    String?
+  grantedAt    DateTime          @default(now())
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@index([permissionId])
+  @@map("user_special_permissions")
+}
+
+model SystemErrorLog {
+  id               String   @id @default(uuid())
+  fileName         String
+  lineNumber       Int
+  errorMessage     String
+  errorDescription String?
+  userId           String?
+  errorType        String
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("system_error_logs")
+}
+
 model Patient {
-  id          String        @id @default(uuid())
-  dni         String        @unique
-  firstName   String
-  lastName    String
-  birthDate   DateTime
-  gender      Gender        @default(OTHER)
-  phone       String?
-  email       String?
-  bloodType   String?
-  allergies   String[]      @default([])
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dni       String   @unique
+  firstName String
+  lastName  String
+  birthDate DateTime
+  gender    Gender   @default(OTHER)
+  phone     String?
+  email     String?
+  bloodType String?
+  allergies String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   appointments   Appointment[]
   medicalRecords MedicalRecord[]
 
+  @@index([tenantId])
   @@map("patients")
 }
 
 model Appointment {
   id        String            @id @default(uuid())
+  tenantId  String
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   dateTime  DateTime
   status    AppointmentStatus @default(PENDING)
   reason    String
@@ -80,6 +154,7 @@ model Appointment {
   doctorId String
   doctor   User   @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Restrict)
 
+  @@index([tenantId])
   @@index([patientId])
   @@index([doctorId])
   @@index([dateTime])
@@ -87,12 +162,14 @@ model Appointment {
 }
 
 model MedicalRecord {
-  id          String   @id @default(uuid())
-  diagnosis   String
-  treatment   String
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  diagnosis String
+  treatment String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
@@ -100,6 +177,7 @@ model MedicalRecord {
   doctorId String
   doctor   User   @relation("DoctorRecords", fields: [doctorId], references: [id], onDelete: Restrict)
 
+  @@index([tenantId])
   @@index([patientId])
   @@index([doctorId])
   @@map("medical_records")

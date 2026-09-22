@@ -55,9 +55,11 @@ export class AppointmentsService {
   }
 
   async create(dto: CreateAppointmentDto) {
+    const tenantId = (dto as any).tenantId || 'default-clinic';
     return this.prisma.appointment.create({
       data: {
         ...dto,
+        tenantId,
         dateTime: new Date(dto.dateTime),
       },
       include: {

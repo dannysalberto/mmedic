@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { PrismaService } from './prisma/prisma.service';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -28,6 +31,13 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Global Exception Filter para trazabilidad obligatoria en BD (Constitución 1.4)
+  const prismaService = app.get(PrismaService);
+  app.useGlobalFilters(new GlobalExceptionFilter(prismaService));
+
+  // Global Multi-Tenant Interceptor (Constitución 2.3)
+  app.useGlobalInterceptors(new TenantInterceptor());
 
   // Swagger OpenAPI Documentation
   const config = new DocumentBuilder()

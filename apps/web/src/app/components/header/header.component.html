@@ -1,0 +1,83 @@
+<header class="main-header">
+  <div class="header-container">
+    <!-- Logotipo alineado a la izquierda -->
+    <a routerLink="/" class="brand-link" title="MMedic - Plataforma Clínica">
+      <img src="/logo.svg" alt="MMedic Logo" class="brand-logo" />
+    </a>
+
+    <!-- Botón Hamburguesa para Mobile -->
+    <button
+      class="mobile-toggle-btn"
+      (click)="toggleMenu()"
+      aria-label="Abrir menú de navegación"
+      [attr.aria-expanded]="isMenuOpen()"
+    >
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <!-- Menú de navegación a la derecha -->
+    <nav class="nav-menu" [class.open]="isMenuOpen()">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <button type="button" class="nav-btn" (click)="openModal('about')">
+            Acerca de
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="nav-btn" (click)="openModal('contact')">
+            Contáctanos
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="nav-btn" (click)="openModal('who')">
+            Quiénes somos
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- Modales informativos -->
+@if (activeModal(); as modal) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        @if (modal === 'about') {
+          <h3>Acerca de MMedic</h3>
+        } @else if (modal === 'contact') {
+          <h3>Contáctanos</h3>
+        } @else if (modal === 'who') {
+          <h3>Quiénes somos</h3>
+        }
+        <button class="close-btn" (click)="closeModal()" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (modal === 'about') {
+          <p>
+            <strong>MMedic</strong> es una plataforma clínica multi-tenant de última generación diseñada para la gestión integral de citas médicas, expedientes de salud, roles granulares y facturación clínica segura.
+          </p>
+          <p class="meta-tag">Versión 2.4.0 — Arquitectura Multi-Tenant y Seguridad RBAC + PBAC.</p>
+        } @else if (modal === 'contact') {
+          <p>Para soporte técnico, implementaciones en centros médicos o asistencia comercial:</p>
+          <ul class="contact-info">
+            <li><strong>Email:</strong> soporte&#64;mmedic.com</li>
+            <li><strong>Teléfono:</strong> +1 (800) 555-MMED</li>
+            <li><strong>Atención:</strong> 24/7 para emergencias clínicas.</li>
+          </ul>
+        } @else if (modal === 'who') {
+          <p>
+            Somos un equipo especializado en ingeniería de software médico y arquitectura de misión crítica, dedicados a transformar la administración hospitalaria mediante interfaces humanas, minimalistas y altamente eficientes.
+          </p>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" (click)="closeModal()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}

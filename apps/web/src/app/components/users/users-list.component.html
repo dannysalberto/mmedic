@@ -1,0 +1,218 @@
+<app-header></app-header>
+
+<main class="users-page">
+  <div class="users-container">
+    <!-- Header bar -->
+    <div class="page-header">
+      <div class="title-area">
+        <h1>Administración de Usuarios</h1>
+        <p class="subtitle">Gestión centralizada de personal clínico, roles y permisos especiales</p>
+      </div>
+
+      <div class="actions-area">
+        <a routerLink="/billing-demo" class="btn btn-demo">
+          ⚡ Probar Permisos (Demo)
+        </a>
+        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+          ➕ Nuevo Usuario
+        </button>
+      </div>
+    </div>
+
+    <!-- Alert / Toast -->
+    @if (feedbackMessage()) {
+      <div class="alert alert-toast">
+        <span>ℹ️</span>
+        <p>{{ feedbackMessage() }}</p>
+      </div>
+    }
+
+    <!-- Filter bar -->
+    <div class="filter-card">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Buscar por nombre, usuario o email..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearch($event)"
+        />
+      </div>
+
+      <div class="role-filter">
+        <label for="filterRole">Filtrar por rol:</label>
+        <select
+          id="filterRole"
+          [ngModel]="selectedRole()"
+          (ngModelChange)="onRoleFilter($event)"
+        >
+          @for (r of roles; track r.value) {
+            <option [value]="r.value">{{ r.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Content: Mobile Cards + Desktop Table -->
+    <div class="table-container">
+      @if (isLoading()) {
+        <div class="loading-box">
+          <div class="spinner"></div>
+          <p>Cargando usuarios...</p>
+        </div>
+      } @else if (users().length === 0) {
+        <div class="empty-box">
+          <span class="empty-icon">👥</span>
+          <h3>No se encontraron usuarios</h3>
+          <p>Intenta ajustar los criterios de búsqueda o crea un nuevo usuario.</p>
+        </div>
+      } @else {
+        <!-- Desktop Table View -->
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Usuario / Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Permisos Especiales</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user.id) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <span class="user-avatar">{{ user.fullName.charAt(0).toUpperCase() }}</span>
+                    <div>
+                      <div class="user-fullname">{{ user.fullName }}</div>
+                      <div class="user-username">&#64;{{ user.username }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ user.email }}</td>
+                <td>
+                  <span class="role-badge" [attr.data-role]="user.role">
+                    {{ user.role }}
+                  </span>
+                </td>
+                <td>
+                  @if (user.role === 'ROL_SUPERADMIN') {
+                    <span class="perm-all-badge">Acceso Total (*)</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-perm-counter"
+                      (click)="openPermissionsModal(user)"
+                    >
+                      🛡️ {{ user.specialPermissionsCount || 0 }} asignados
+                    </button>
+                  }
+                </td>
+                <td>
+                  <span class="status-badge" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                    {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      title="Editar Usuario"
+                      (click)="openEditModal(user)"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      title="Asignar Permisos Especiales"
+                      (click)="openPermissionsModal(user)"
+                    >
+                      🛡️
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      [title]="user.isActive ? 'Desactivar' : 'Activar'"
+                      (click)="toggleStatus(user)"
+                    >
+                      {{ user.isActive ? '⏸️' : '▶️' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Mobile Card View -->
+        <div class="users-mobile-list">
+          @for (user of users(); track user.id) {
+            <div class="user-card" [class.card-inactive]="!user.isActive">
+              <div class="card-header-user">
+                <div class="user-cell">
+                  <span class="user-avatar">{{ user.fullName.charAt(0).toUpperCase() }}</span>
+                  <div>
+                    <div class="user-fullname">{{ user.fullName }}</div>
+                    <div class="user-username">&#64;{{ user.username }}</div>
+                  </div>
+                </div>
+                <span class="status-badge" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                  {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+
+              <div class="card-meta">
+                <div><strong>Email:</strong> {{ user.email }}</div>
+                <div>
+                  <strong>Rol:</strong>
+                  <span class="role-badge" [attr.data-role]="user.role">{{ user.role }}</span>
+                </div>
+                <div>
+                  <strong>Permisos:</strong>
+                  @if (user.role === 'ROL_SUPERADMIN') {
+                    <span class="perm-all-badge">Acceso Total (*)</span>
+                  } @else {
+                    <span class="perm-count-text">{{ user.specialPermissionsCount || 0 }} especiales</span>
+                  }
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openEditModal(user)">
+                  ✏️ Editar
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" (click)="openPermissionsModal(user)">
+                  🛡️ Permisos
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" (click)="toggleStatus(user)">
+                  {{ user.isActive ? '⏸️ Desactivar' : '▶️ Activar' }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</main>
+
+<!-- Modals -->
+@if (isFormModalOpen()) {
+  <app-user-form-modal
+    [userToEdit]="selectedUserForEdit()"
+    (close)="closeFormModal()"
+    (saved)="onUserSaved($event)"
+  ></app-user-form-modal>
+}
+
+@if (isPermissionsModalOpen() && selectedUserForPermissions()) {
+  <app-user-permissions-modal
+    [user]="selectedUserForPermissions()!"
+    (close)="closePermissionsModal()"
+    (changed)="loadUsers()"
+  ></app-user-permissions-modal>
+}

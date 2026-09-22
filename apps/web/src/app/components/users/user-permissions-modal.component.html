@@ -1,0 +1,84 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-info">
+        <h3>Permisos Especiales</h3>
+        <p class="subtitle">
+          Usuario: <strong>{{ user.fullName }}</strong> (<code>{{ user.username }}</code>) &bull;
+          <span class="role-badge">{{ user.role }}</span>
+        </p>
+      </div>
+      <button type="button" class="btn-close" (click)="close.emit()" aria-label="Cerrar modal">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      @if (errorMessage()) {
+        <div class="alert alert-error">
+          <span>⚠️</span>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      }
+
+      @if (successMessage()) {
+        <div class="alert alert-success">
+          <span>✅</span>
+          <p>{{ successMessage() }}</p>
+        </div>
+      }
+
+      @if (user.role === 'ROL_SUPERADMIN') {
+        <div class="alert alert-info">
+          <span>ℹ️</span>
+          <p>
+            El usuario <strong>ROL_SUPERADMIN</strong> posee acceso irrestricto y absoluto a todas las
+            operaciones del sistema (<code>*</code>). No requiere asignación individual de permisos.
+          </p>
+        </div>
+      }
+
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando catálogo de permisos especiales...</p>
+        </div>
+      } @else {
+        <div class="permissions-list">
+          @for (perm of catalog(); track perm.id) {
+            <div class="permission-item" [class.active]="hasPermission(perm.code)">
+              <div class="perm-details">
+                <div class="perm-title-row">
+                  <span class="perm-name">{{ perm.name }}</span>
+                  <span class="perm-code">{{ perm.code }}</span>
+                  <span class="module-tag">{{ perm.module }}</span>
+                </div>
+                <p class="perm-desc">{{ perm.description }}</p>
+              </div>
+
+              <div class="perm-action">
+                <button
+                  type="button"
+                  class="btn-toggle"
+                  [class.granted]="hasPermission(perm.code)"
+                  [disabled]="isSaving() || user.role === 'ROL_SUPERADMIN'"
+                  (click)="togglePermission(perm)"
+                >
+                  @if (hasPermission(perm.code)) {
+                    <span>✅ Concedido</span>
+                  } @else {
+                    <span>➕ Asignar</span>
+                  }
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="close.emit()">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

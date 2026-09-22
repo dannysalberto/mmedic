@@ -56,9 +56,11 @@ export class PatientsService {
       throw new ConflictException(`Ya existe un paciente con el DNI ${dto.dni}`);
     }
 
+    const tenantId = (dto as any).tenantId || 'default-clinic';
     return this.prisma.patient.create({
       data: {
         ...dto,
+        tenantId,
         birthDate: new Date(dto.birthDate),
       },
     });

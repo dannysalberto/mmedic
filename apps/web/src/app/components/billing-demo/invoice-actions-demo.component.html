@@ -1,0 +1,145 @@
+<app-header></app-header>
+
+<main class="demo-page">
+  <div class="demo-container">
+    <div class="page-top">
+      <div>
+        <h2>Demostración de Verificación de Permisos Dinámicos</h2>
+        <p class="lead">
+          Valida en tiempo real la combinación <code>Usuario + Permiso -> booleano</code> y observa la
+          activación condicional del botón de acción crítica <strong>"Anular Factura"</strong>.
+        </p>
+      </div>
+      <div class="top-actions">
+        <a routerLink="/users" class="btn btn-outline">
+          &larr; Volver a Gestión de Usuarios
+        </a>
+      </div>
+    </div>
+
+    <div class="demo-grid">
+      <!-- Selector & Test Panel -->
+      <div class="card panel-config">
+        <div class="card-header">
+          <h3>1. Parámetros de Consulta</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="userSelect">Seleccionar Usuario a evaluar:</label>
+            <select
+              id="userSelect"
+              [ngModel]="selectedUserId()"
+              (ngModelChange)="selectedUserId.set($event); verifyPermission()"
+            >
+              @for (u of users(); track u.id) {
+                <option [value]="u.id">
+                  {{ u.fullName }} ({{ u.role }}) - {{ u.username }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="permSelect">Permiso Especial requerido:</label>
+            <select
+              id="permSelect"
+              [ngModel]="selectedPermission()"
+              (ngModelChange)="selectedPermission.set($event); verifyPermission()"
+            >
+              <option value="FACTURA_ANULAR">FACTURA_ANULAR - Anular Factura</option>
+              <option value="HISTORIA_CLINICA_EXPORTAR">HISTORIA_CLINICA_EXPORTAR - Exportar Historia Clínica</option>
+              <option value="PACIENTES_ELIMINAR">PACIENTES_ELIMINAR - Eliminar Paciente</option>
+              <option value="REPORTES_FINANCIEROS_VER">REPORTES_FINANCIEROS_VER - Ver Reportes Financieros</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-primary btn-block"
+            (click)="verifyPermission()"
+            [disabled]="isChecking()"
+          >
+            @if (isChecking()) {
+              <span class="spinner"></span> Verificando en servidor...
+            } @else {
+              🔍 Re-verificar Permiso
+            }
+          </button>
+
+          @if (checkResult()) {
+            <div
+              class="result-badge"
+              [class.has-perm]="checkResult()?.hasPermission"
+              [class.no-perm]="!checkResult()?.hasPermission"
+            >
+              <div class="badge-status">
+                <span class="icon">{{ checkResult()?.hasPermission ? '✅' : '🚫' }}</span>
+                <strong>Resultado: {{ checkResult()?.hasPermission ? 'VERDADERO (Permitido)' : 'FALSO (Denegado)' }}</strong>
+              </div>
+              <p class="badge-detail">
+                Método de autorización: <code>{{ checkResult()?.grantedVia }}</code>
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Action & Simulation Panel -->
+      <div class="card panel-action">
+        <div class="card-header">
+          <h3>2. Simulación de Facturación en Caja</h3>
+        </div>
+        <div class="card-body">
+          <div class="invoice-box">
+            <div class="invoice-top">
+              <span class="invoice-title">Comprobante Médico Electrónico</span>
+              <span class="invoice-status">EMITIDA</span>
+            </div>
+            <div class="invoice-details">
+              <div><strong>Folio:</strong> #FAC-2026-0042</div>
+              <div><strong>Paciente:</strong> Juan Carlos Pérez</div>
+              <div><strong>Concepto:</strong> Consulta de Especialidad Cardiológica</div>
+              <div><strong>Total:</strong> <span class="amount">$1,450.00 MXN</span></div>
+            </div>
+          </div>
+
+          @if (actionFeedback()) {
+            <div class="alert alert-success">
+              {{ actionFeedback() }}
+            </div>
+          }
+
+          <div class="action-zone">
+            <h4>Acciones sobre el Comprobante:</h4>
+            <div class="button-container">
+              <button
+                type="button"
+                id="btn-anular-factura"
+                class="btn btn-danger"
+                [disabled]="!checkResult()?.hasPermission"
+                (click)="anularFactura()"
+              >
+                @if (checkResult()?.hasPermission) {
+                  <span>🗑️ Anular Factura</span>
+                } @else {
+                  <span>🔒 Anular Factura (Requiere Permiso)</span>
+                }
+              </button>
+            </div>
+
+            @if (!checkResult()?.hasPermission) {
+              <p class="perm-warning">
+                ⚠️ El botón <strong>"Anular Factura"</strong> se encuentra deshabilitado porque el usuario
+                seleccionado no cuenta con el permiso <code>FACTURA_ANULAR</code> en el backend.
+              </p>
+            } @else {
+              <p class="perm-granted-info">
+                ✨ ¡Botón activo! El usuario tiene autorización legal para anular esta factura.
+              </p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

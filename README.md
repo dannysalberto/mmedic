@@ -1,6 +1,6 @@
-# MMedic - Plataforma Clínica Multiplataforma
+# MMedic - Plataforma Clínica Multiplataforma & Multi-Tenant
 
-Monorepo integral para el sistema médico **MMedic**, diseñado para operar de manera unificada en Web, Dispositivos Móviles (Android) y Servicios de Backend con PostgreSQL.
+Monorepo integral para el sistema médico **MMedic**, diseñado para operar de manera unificada en Web (Mobile-First responsive), Dispositivos Móviles (Android) y Servicios de Backend con PostgreSQL en **Supabase** bajo arquitectura multi-tenant estricta.
 
 ---
 
@@ -9,18 +9,56 @@ Monorepo integral para el sistema médico **MMedic**, diseñado para operar de m
 ```
 MMedic/
 ├── apps/
-│   ├── web/         # Frontend Web con Angular 19 (Standalone, Signals, Reactive Forms)
-│   ├── api/         # Backend REST con NestJS 11, Prisma ORM 6 y Swagger OpenAPI
+│   ├── web/         # Frontend Web con Angular 19 (Standalone, Signals, Mobile-First CSS)
+│   ├── api/         # Backend REST con NestJS 11, Prisma ORM 6, Passport JWT y Swagger OpenAPI
 │   └── android/     # Aplicación nativa Android en Kotlin con Jetpack Compose y Retrofit
 │
 ├── packages/
 │   ├── tsconfig/    # Configuraciones base de TypeScript compartidas
 │   └── types/       # Modelos y DTOs comunes entre Web y API (@mmedic/types)
 │
-├── docker-compose.yml # PostgreSQL 16 + Adminer para desarrollo local
+├── docker-compose.yml # PostgreSQL 16 local (alternativo a Supabase)
 ├── .env.example       # Plantilla de variables de entorno
 └── turbo.json         # Orquestación de pipelines con Turborepo
 ```
+
+---
+
+## 🔑 Credenciales de Acceso Inicial
+
+El sistema incluye una cuenta raíz de administración precargada vía seed:
+
+| Campo | Valor |
+|---|---|
+| **Usuario** | `superadmin` |
+| **Contraseña** | `superadmin@123#` |
+| **Rol** | `ROL_SUPERADMIN` |
+| **Permisos** | Acceso irrestricto y absoluto (`*`) |
+
+### Cuentas de Personal Clínico de Demostración:
+- **Cajero:** `cajero_carlos` / `Cajero@123#` (Posee permiso especial `FACTURA_ANULAR`)
+- **Médico:** `dr_morales` / `Doctor@123#` (`ROL_MEDICO`)
+- **Administrador:** `admin_clinica` / `Admin@123#` (`ROL_ADMIN`)
+
+---
+
+## 🛡️ Roles y Permisos Dinámicos
+
+### Roles Base del Sistema:
+1. `ROL_SUPERADMIN`: Control total del sistema y gestión transversal de tenants.
+2. `ROL_ADMIN`: Administrador de clínica local.
+3. `ROL_MEDICO`: Personal médico asistencial.
+4. `ROL_CAJERO`: Emisión, cobro y gestión de facturación en caja.
+5. `ROL_GERENCIA`: Consulta de reportes y analítica ejecutiva.
+
+### Permisos Especiales Atómicos:
+Permisos asignables y revocables de forma dinámica por usuario:
+- `FACTURA_ANULAR`: Permite autorizar la anulación de comprobantes emitidos.
+- `HISTORIA_CLINICA_EXPORTAR`: Autoriza la descarga y exportación de historias clínicas.
+- `PACIENTES_ELIMINAR`: Permite dar de baja registros de pacientes.
+- `REPORTES_FINANCIEROS_VER`: Habilita reportes de balance financiero.
+
+> **Verificación Dinámica**: Disponible en el endpoint `POST /api/v1/permissions/check` y comprobable visualmente en la vista `/billing-demo`.
 
 ---
 
@@ -28,8 +66,8 @@ MMedic/
 
 - **Node.js**: v18+ (Recomendado v22+)
 - **pnpm**: v9+ / v11+ (`npm install -g pnpm`)
-- **Docker & Docker Compose**: Para levantar PostgreSQL localmente
-- **JDK 17+** & **Android Studio**: Para compilar o ejecutar el módulo móvil Android
+- **Supabase PostgreSQL** o Docker local
+- **JDK 17+** & **Android Studio**: Para el módulo móvil Android
 
 ---
 
@@ -37,88 +75,74 @@ MMedic/
 
 ### 1. Clonar e Instalar Dependencias
 ```bash
-# Instalar todas las dependencias del monorepo (Web, API, Tipos)
 pnpm install
 ```
 
-### 2. Configurar Variables de Entorno
-Copia el archivo `.env.example` a `.env`:
+### 2. Configurar Variables de Entorno (Supabase)
+MMedic utiliza Supabase Cloud PostgreSQL con soporte dual para Connection Pooling y Migraciones Directas:
 ```bash
 cp .env.example .env
 ```
+Asegúrate de configurar en `.env`:
+```env
+# URL con Connection Pooling (Puerto 6543) para consultas en runtime
+DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-### 3. Iniciar la Base de Datos PostgreSQL
-Levanta el contenedor de PostgreSQL 16 y Adminer con Docker Compose:
-```bash
-pnpm db:up
+# URL de conexión directa (Puerto 5432) para Prisma Migrate
+DIRECT_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres"
+
+JWT_SECRET="mmedic_jwt_secret_super_secure_key_2026_clinical_systems_platform_token"
 ```
-- **PostgreSQL**: `localhost:5432` (Usuario: `mmedic`, Password: `mmedic_secure_password`, BD: `mmedic_db`)
-- **Adminer (Visualizador Web)**: [http://localhost:8080](http://localhost:8080) (Sistema: *PostgreSQL*, Servidor: *postgres*, Usuario: *mmedic*, BD: *mmedic_db*)
 
-### 4. Generar Cliente Prisma y Migraciones
+### 3. Generar Cliente Prisma y Migraciones
 ```bash
 # Generar cliente de Prisma
 pnpm db:generate
 
-# Ejecutar migraciones iniciales
+# Ejecutar migraciones
 pnpm db:migrate
 
-# (Opcional) Poblar la base de datos con doctores y pacientes de prueba
+# Sembrar inquilino por defecto, usuarios de prueba y permisos
 pnpm db:seed
 ```
 
-### 5. Iniciar en Modo Desarrollo (Web + API)
-Inicia ambas aplicaciones simultáneamente con Turborepo:
+### 4. Iniciar en Modo Desarrollo (Web + API)
 ```bash
 pnpm dev
 ```
 O de manera individual:
 ```bash
-# Iniciar solo la API NestJS (Puerto 3000)
-pnpm dev:api
-
-# Iniciar solo el Frontend Next.js (Puerto 3001)
-pnpm dev:web
+pnpm dev:api   # API NestJS en http://localhost:3000
+pnpm dev:web   # Web Angular en http://localhost:3001
 ```
 
 ---
 
-## 🌐 Servicios Disponibles
+## 🌐 Servicios y Rutas Web
 
-| Servicio | URL Local | Descripción |
+| Servicio / Pantalla | Ruta | Descripción |
 |---|---|---|
-| **Web Portal** | [http://localhost:3001](http://localhost:3001) | Dashboard clínico Angular 19 |
-| **API REST** | [http://localhost:3000/api/v1](http://localhost:3000/api/v1) | Endpoint base de NestJS |
-| **Swagger Docs** | [http://localhost:3000/api/docs](http://localhost:3000/api/docs) | Documentación interactiva de la API |
-| **Prisma Studio** | `pnpm db:studio` -> [http://localhost:5555](http://localhost:5555) | Explorador visual de datos de Prisma |
-| **Adminer DB** | [http://localhost:8080](http://localhost:8080) | Panel de administración de PostgreSQL |
+| **Portal de Login** | `http://localhost:3001/login` | Acceso con layout 80/20 y cabecera institucional |
+| **Administración de Usuarios** | `http://localhost:3001/users` | CRUD de usuarios, asignación de roles y permisos especiales |
+| **Demo Verificación de Permisos** | `http://localhost:3001/billing-demo` | Prueba interactiva del botón condicional "Anular Factura" |
+| **API REST** | `http://localhost:3000/api/v1` | Endpoints REST protegidos con JWT y multi-tenancy |
+| **Documentación Swagger** | `http://localhost:3000/api/docs` | Documentación interactiva OpenAPI |
+| **Prisma Studio** | `pnpm db:studio` | Explorador gráfico de base de datos |
 
 ---
 
 ## 📱 Módulo Android (Kotlin + Jetpack Compose)
 
-La aplicación móvil se encuentra en la carpeta [`apps/android`](./apps/android):
-
-1. Abre **Android Studio**.
-2. Selecciona **Open** y navega a la carpeta `apps/android`.
-3. Deja que Gradle sincronice las dependencias (`build.gradle.kts`).
-4. **Conectividad con la API**:
-   - Si utilizas el **Emulador Oficial de Android**, la app se conecta automáticamente a `http://10.0.2.2:3000/api/v1`.
-   - Si utilizas un **Dispositivo Físico** conectado por Wi-Fi o USB, puedes cambiar la URL directamente desde la interfaz de la app indicando la IP local de tu PC (ej: `http://192.168.1.50:3000/api/v1`).
-5. La pantalla principal incluye una prueba de conectividad en tiempo real contra el endpoint `/health` de NestJS.
+Ubicado en [`apps/android`](./apps/android):
+- Arquitectura limpia con Jetpack Compose y Retrofit.
+- Conexión al emulador vía `http://10.0.2.2:3000/api/v1` o IP de red local para dispositivos físicos.
 
 ---
 
-## 📦 Scripts Disponibles en el Root
+## 📜 Cumplimiento Constitucional
 
-```bash
-pnpm dev          # Inicia Web y API en paralelo con Hot-Reload
-pnpm build        # Compila todos los proyectos respetando el grafo de dependencias
-pnpm lint         # Ejecuta linter en todo el monorepo
-pnpm db:up        # Inicia PostgreSQL y Adminer en Docker
-pnpm db:down      # Detiene los contenedores Docker
-pnpm db:migrate   # Ejecuta migraciones de Prisma
-pnpm db:generate  # Genera el cliente de Prisma
-pnpm db:seed      # Siembra datos de prueba
-pnpm db:studio    # Abre Prisma Studio en el navegador
-```
+- **Trazabilidad en BD (1.4)**: Todo error en endpoints backend se persiste en `system_error_logs` con archivo, línea, mensaje, usuario y tipo de error.
+- **Migraciones Atómicas (1.5)**: Cada cambio de esquema cuenta con su migración versionada en Prisma.
+- **Mobile-First (2.2)**: Layouts responsivos diseñados desde dispositivos móviles apilados hacia escritorio (80% identidad visual / 20% login en pantallas amplias).
+- **Multi-Tenant por Defecto (2.3)**: Aislamiento estricto de datos filtrando automáticamente por `tenantId`.
+- **Límites de Líneas de Código (3.2 & 3.3)**: Controladores $\le 80$ líneas de código y componentes/servicios $\le 300$ líneas.
