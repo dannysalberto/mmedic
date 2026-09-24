@@ -123,6 +123,18 @@
 
 ---
 
+## Phase 8: Android Native Parity (Jetpack Compose & Kotlin)
+
+**Purpose**: Implementación de la paridad nativa Android para autenticación y consulta de sesión conforme al Principio 1.3 de la Constitución v2.5.0.
+
+- [ ] T043 [P] Definir modelos de datos de autenticación (`LoginRequest`, `LoginResponse`, `User`, `ApiResponse<T>`) en `apps/android/app/src/main/java/com/mmedic/data/model/AuthModels.kt`
+- [ ] T044 Implementar `AuthApiService` y gestor seguro de sesión JWT (`SessionManager`) en `apps/android/app/src/main/java/com/mmedic/data/api/`
+- [ ] T045 Implementar `AuthViewModel` con StateFlow para estados de login y verificación de permisos (`hasPermission`) en `apps/android/app/src/main/java/com/mmedic/ui/auth/AuthViewModel.kt`
+- [ ] T046 Diseñar pantalla nativa `LoginScreen` en Jetpack Compose con branding MMedic, soporte de errores y tokens de diseño en `apps/android/app/src/main/java/com/mmedic/ui/auth/LoginScreen.kt`
+- [ ] T047 Integrar flujo de autenticación y navegación condicional en `apps/android/app/src/main/java/com/mmedic/MainActivity.kt`
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -135,6 +147,8 @@ graph TD
     US2 --> US3[Phase 5: US3 - Permisos Especiales]
     US3 --> US4[Phase 6: US4 - Verificación & Botón Anular Factura]
     US4 --> Polish[Phase 7: Polish & Validación Global]
+    US1 --> Android[Phase 8: Paridad Nativa Android]
+    Polish --> Android
 ```
 
 ---

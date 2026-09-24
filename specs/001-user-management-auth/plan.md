@@ -50,7 +50,7 @@ Implementación integral del sistema de identidad, control de acceso y portal de
 
 | Principio Constitucional | Estado | Evidencia y Justificación Técnica |
 |---|---|---|
-| **Principio I: Stack & Reutilización (1.1, 1.2, 1.3)** | **PASS** | API REST pura y desacoplada en NestJS + Prisma; contratos centralizados en `packages/types` (`@mmedic/types`); soporte futuro para clientes móviles sin cambios en endpoints. |
+| **Principio I: Stack & Reutilización (1.1, 1.2, 1.3)** | **PASS** | API REST pura y desacoplada en NestJS + Prisma; contratos centralizados en `packages/types` (`@mmedic/types`); desarrollo dual con paridad funcional Web SPA (`apps/web`) y móvil nativo Android (`apps/android` en Jetpack Compose). |
 | **Principio I: Trazabilidad de Errores en BD (1.4)** | **PASS** | Implementación de `SystemErrorLog` en PostgreSQL y filtro global `GlobalExceptionFilter` que persiste fichero, línea, mensaje, descripción, usuario, fecha y tipo de excepción. |
 | **Principio I: Control de Migraciones Atómicas (1.5)** | **PASS** | Creación de nuevas tablas (`tenants`, `special_permissions`, `user_special_permissions`, `system_error_logs`) y semillas mediante Prisma Migrate versionado. |
 | **Principio II: JWT Stateless (2.1)** | **PASS** | Autenticación basada exclusivamente en tokens JWT con `JwtAuthGuard` por defecto y decorador `@Public()` para login y páginas públicas. |

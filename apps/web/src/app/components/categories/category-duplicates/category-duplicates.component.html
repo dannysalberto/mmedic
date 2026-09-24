@@ -1,0 +1,119 @@
+<div class="duplicates-container">
+  <div class="duplicates-header">
+    <div>
+      <h3 class="title">Detección y Consolidación de Duplicados</h3>
+      <p class="subtitle">
+        Analiza coincidencias de nombres normalizados para identificar categorías registradas múltiples veces por error humano.
+      </p>
+    </div>
+    <button type="button" id="btn-analizar-duplicados" class="btn-refresh"
+      (click)="categoriesService.loadDuplicates().subscribe()" [disabled]="isLoading()">
+      ⚡ Analizar Nuevamente
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner-large"></div>
+      <span>Analizando catálogo de categorías y buscando coincidencias...</span>
+    </div>
+  } @else if (duplicates().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">✨</div>
+      <h4>¡Excelente! No se detectaron duplicados</h4>
+      <p>Todas las categorías registradas poseen nombres únicos en el sistema.</p>
+    </div>
+  } @else {
+    <div class="groups-grid">
+      @for (group of duplicates(); track group.normalizedName) {
+        <div class="group-card">
+          <div class="group-card-header">
+            <div class="group-tag">
+              <span class="badge-similarity">Coincidencia ~{{ group.matchScore }}%</span>
+              <span class="group-title">Grupo: {{ group.categories[0].name }}</span>
+            </div>
+            <button type="button" class="btn-merge"
+              [id]="'btn-consolidar-' + group.normalizedName"
+              (click)="openMergeModal(group)">
+              🔗 Consolidar Grupo
+            </button>
+          </div>
+
+          <div class="entities-subtable">
+            @for (cat of group.categories; track cat.id) {
+              <div class="entity-item">
+                <div class="entity-info">
+                  <span class="avatar-circle">{{ cat.name.substring(0, 2).toUpperCase() }}</span>
+                  <span class="entity-name">{{ cat.name }}</span>
+                </div>
+                <div class="entity-meta">
+                  <span class="badge-articles">{{ cat.articlesCount }} art.</span>
+                  <span class="badge-date">{{ cat.createdAt | date: 'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal de Fusión de Categorías -->
+@if (selectedGroup()) {
+  <div class="modal-backdrop" (click)="closeMergeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Consolidación de Categoría</h3>
+        <button type="button" class="btn-close" (click)="closeMergeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="merge-description">
+          Seleccione la <strong>Categoría Principal</strong> (la que conservará los artículos) y la
+          <strong>Categoría Secundaria</strong> (la redundante que se eliminará tras reasignar todos sus artículos).
+        </p>
+
+        <div class="merge-selectors">
+          <div class="select-box">
+            <label class="select-label">1. Categoría Principal (CONSERVAR):</label>
+            <select id="select-categoria-principal" class="form-control"
+              [value]="primaryId()" (change)="setPrimary($any($event.target).value)">
+              @for (cat of selectedGroup()!.categories; track cat.id) {
+                <option [value]="cat.id">
+                  {{ cat.name }} ({{ cat.articlesCount }} art.)
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="select-box">
+            <label class="select-label">2. Categoría Secundaria (ELIMINAR / FUSIONAR):</label>
+            <select id="select-categoria-secundaria" class="form-control"
+              [value]="secondaryId()" (change)="secondaryId.set($any($event.target).value)">
+              @for (cat of selectedGroup()!.categories; track cat.id) {
+                <option [value]="cat.id">
+                  {{ cat.name }} ({{ cat.articlesCount }} art.)
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeMergeModal()" [disabled]="isMerging()">
+          Cancelar
+        </button>
+        <button type="button" id="btn-confirmar-fusion" class="btn-danger-action"
+          (click)="executeMerge()" [disabled]="isMerging() || primaryId() === secondaryId()">
+          @if (isMerging()) {
+            Fusionando...
+          } @else {
+            Confirmar Fusión Atómica
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,223 @@
+<app-header></app-header>
+<div class="page-container">
+  <div class="list-header">
+    <div class="header-titles">
+      <h2 class="page-title">Módulo de Facturación</h2>
+      <p class="page-subtitle">Emisión, cobranza y gestión de facturas fiscales y administrativas</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/invoices/new" class="btn-primary">
+        <span>+ Nueva Factura</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros -->
+  <div class="filters-card glass-panel">
+    <div class="search-field">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="filter-input"
+        placeholder="Buscar por N° de factura, RIF o nombre del cliente..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event); onSearch()"
+      />
+    </div>
+
+    <div class="filter-dropdowns">
+      <select
+        class="filter-select"
+        [ngModel]="selectedStatus()"
+        (ngModelChange)="onFilterStatus($event)"
+      >
+        <option value="ALL">Todos los Estados</option>
+        <option value="PENDING">Pendientes</option>
+        <option value="PAID">Pagadas</option>
+        <option value="VOIDED">Anuladas</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="spinner">⏳</span>
+      <p>Cargando facturas...</p>
+    </div>
+  } @else if (invoices().length === 0) {
+    <!-- Empty State -->
+    <div class="empty-state glass-panel">
+      <div class="empty-icon">🧾</div>
+      <h3>No se encontraron facturas</h3>
+      <p>Comienza emitiendo una nueva factura o ajusta los criterios de búsqueda.</p>
+      <a routerLink="/invoices/new" class="btn-primary" style="margin-top: 1rem;">
+        <span>+ Crear Factura</span>
+      </a>
+    </div>
+  } @else {
+    <!-- Invoices Table -->
+    <div class="table-container glass-panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N° Factura</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Tipo</th>
+            <th class="text-right">Total ($)</th>
+            <th class="text-right">Saldo ($)</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (inv of invoices(); track inv.id) {
+            <tr [class.voided-row]="inv.status === 'VOIDED'">
+              <td class="font-bold">
+                <span class="inv-number">{{ inv.invoiceNumber }}</span>
+              </td>
+              <td>{{ inv.issueDate | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <div class="customer-info">
+                  <span class="customer-name">{{ inv.customer.name || 'Cliente Ocasional' }}</span>
+                  <span class="customer-id">{{ inv.customer.taxId || 'S/N' }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge-type" [class.badge-credit]="inv.type === 'CREDIT'">
+                  {{ inv.type === 'CASH' ? 'Contado' : 'Crédito' }}
+                </span>
+              </td>
+              <td class="text-right font-bold text-primary">
+                ${{ inv.total | number:'1.3-3' }}
+              </td>
+              <td class="text-right font-bold" [class.text-danger]="inv.status === 'PENDING'">
+                @if (inv.status === 'PAID') {
+                  <span class="text-success">$0.000</span>
+                } @else if (inv.status === 'VOIDED') {
+                  <span class="text-muted">-</span>
+                } @else {
+                  ${{ (inv.balanceDue || (inv.total - (inv.totalPaid || 0))) | number:'1.3-3' }}
+                }
+              </td>
+              <td class="text-center">
+                @if (inv.status === 'PENDING') {
+                  <span class="status-badge status-pending">PENDIENTE</span>
+                } @else if (inv.status === 'PAID') {
+                  <span class="status-badge status-paid">PAGADA</span>
+                } @else if (inv.status === 'VOIDED') {
+                  <span class="status-badge status-voided">ANULADA</span>
+                }
+              </td>
+              <td class="text-center actions-cell">
+                <button
+                  type="button"
+                  class="btn-action btn-view"
+                  title="Ver Comprobante"
+                  (click)="openPreview(inv.id)"
+                >
+                  👁️
+                </button>
+
+                @if (inv.status === 'PENDING') {
+                  <button
+                    type="button"
+                    class="btn-action btn-pay"
+                    title="Cobrar / Registrar Pagos"
+                    (click)="openPaymentModal(inv.id)"
+                  >
+                    💳
+                  </button>
+                }
+
+                @if (inv.status !== 'VOIDED' && isAdmin()) {
+                  <button
+                    type="button"
+                    class="btn-action btn-void"
+                    title="Anular Factura"
+                    (click)="promptVoid(inv)"
+                  >
+                    🚫
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Modal Preview -->
+  @if (previewInvoice()) {
+    <app-invoice-preview-modal
+      [invoice]="previewInvoice()!"
+      (closeModal)="closePreview()"
+    ></app-invoice-preview-modal>
+  }
+
+  <!-- Modal Pagos -->
+  @if (paymentInvoice()) {
+    <div class="modal-backdrop" (click)="closePaymentModal()">
+      <div class="modal-dialog glass-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <h3>Gestión de Cobranza - {{ paymentInvoice()!.invoiceNumber }}</h3>
+            <p class="modal-sub">Cliente: {{ paymentInvoice()!.customer.name }} ({{ paymentInvoice()!.customer.taxId }})</p>
+          </div>
+          <button type="button" class="btn-close" (click)="closePaymentModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <app-invoice-payment-section
+            [invoiceId]="paymentInvoice()!.id"
+            [totalInvoice]="paymentInvoice()!.total"
+            [existingPayments]="paymentInvoice()!.payments"
+          ></app-invoice-payment-section>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closePaymentModal()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Anular Factura -->
+  @if (voidTargetInvoice()) {
+    <div class="modal-backdrop" (click)="cancelVoid()">
+      <div class="modal-dialog glass-panel modal-sm" (click)="$event.stopPropagation()">
+        <div class="modal-header danger-header">
+          <h3>Anular Factura {{ voidTargetInvoice()!.invoiceNumber }}</h3>
+          <button type="button" class="btn-close" (click)="cancelVoid()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="warning-callout">
+            ⚠️ <strong>Atención:</strong> Esta acción es irreversible. Se revertirán los estados de pago y la factura quedará marcada como ANULADA.
+          </div>
+          <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label required">Motivo de Anulación</label>
+            <textarea
+              class="form-control"
+              rows="3"
+              placeholder="Indique la justificación de anulación..."
+              [(ngModel)]="voidReason"
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="cancelVoid()" [disabled]="isVoiding()">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn-danger"
+            (click)="confirmVoid()"
+            [disabled]="isVoiding() || !voidReason().trim()"
+          >
+            {{ isVoiding() ? 'Anulando...' : 'Confirmar Anulación' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,102 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          {{ customerToEdit() ? 'Editar Cliente / Paciente' : 'Nuevo Cliente / Paciente' }}
+        </h3>
+        <button type="button" class="btn-close" (click)="onClose()">✕</button>
+      </div>
+
+      <form (submit)="$event.preventDefault(); onSubmit()" class="modal-form">
+        @if (errorMessage()) {
+          <div class="alert-error">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="form-label">Cédula / RIF *</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="taxId()"
+            (ngModelChange)="taxId.set($event.toUpperCase())"
+            name="taxId"
+            placeholder="Ej: V-12345678, J-98765432-1"
+            required
+            [disabled]="isSubmitting()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nombre / Razón Social *</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            placeholder="Ej: María Rodríguez, Clinica Salud C.A."
+            required
+            [disabled]="isSubmitting()"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label">Teléfono</label>
+            <input
+              type="text"
+              class="form-control"
+              [ngModel]="phone()"
+              (ngModelChange)="phone.set($event)"
+              name="phone"
+              placeholder="Ej: 0414-1234567"
+              [disabled]="isSubmitting()"
+            />
+          </div>
+
+          <div class="form-group flex-1">
+            <label class="form-label">Correo Electrónico</label>
+            <input
+              type="email"
+              class="form-control"
+              [ngModel]="email()"
+              (ngModelChange)="email.set($event)"
+              name="email"
+              placeholder="Ej: paciente@correo.com"
+              [disabled]="isSubmitting()"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dirección Fiscal / Habitacional</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="address()"
+            (ngModelChange)="address.set($event)"
+            name="address"
+            placeholder="Ej: Av. Principal, Edif. Centro, Apto 4B"
+            [disabled]="isSubmitting()"
+          />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="onClose()" [disabled]="isSubmitting()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <span class="spinner"></span> Guardando...
+            } @else {
+              {{ customerToEdit() ? 'Guardar Cambios' : 'Registrar Cliente' }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,14 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 2.3.0 -> 2.4.0
+- Version change: 2.5.0 -> 2.6.0
 - Ratification Date: 2026-09-20
-- Last Amended Date: 2026-09-20
+- Last Amended Date: 2026-09-22
 - Modified Principles:
-  * Principle II: Seguridad, Multi-Tenancy y Control de Acceso Granular (Adición de Subsección 2.3: Multi-Tenancy Obligatorio por Defecto y Aislamiento Estricto)
+  * Principle V: Estándares UI/UX y Sistema de Diseño Centralizado (Adición de Subsección 5.4: Notificaciones Transversales Push y Retención de Navegación)
 - Added Sections:
-  * Declaración de Multi-Tenancy Nativo en Preámbulo (Sección 1)
-  * 2.3. Arquitectura Multi-Tenant Obligatoria por Defecto y Aislamiento Estricto
-  * Actualización de la Matriz de Criterios de Aceptación Técnicos con Quality Gate de Aislamiento Multi-Tenant
+  * Quality Gate de Notificaciones Push y Navegación No Intrusiva en la Matriz de Criterios de Aceptación Técnicos (Sección 3)
 -->
 
 # CONSTITUCIÓN ARQUITECTÓNICA DEL SISTEMA MMEDIC
@@ -18,13 +16,15 @@ Sync Impact Report
 
 ## 1. Preámbulo y Alcance
 
-El presente documento constituye la **Constitución Técnica de Software** para la plataforma **MMedic**. Establece las directivas de arquitectura, estándares de codificación, controles de seguridad y políticas de higiene de memoria de cumplimiento estricto y no negociable. El sistema opera estructuralmente bajo un paradigma **Multi-Tenant nativo por defecto** en todas sus capas y módulos.
+El presente documento constituye la **Constitución Técnica de Software** para la plataforma **MMedic**. Establece las directivas de arquitectura, estándares de codificación, controles de seguridad y políticas de higiene de memoria de cumplimiento estricto y no negociable. El sistema opera estructuralmente bajo un paradigma **Multi-Tenant nativo por defecto** en todas sus capas y módulos, y bajo una directiva vinculante de **Desarrollo Dual y Paridad de Plataformas (Web y Android por defecto)**.
 
 Aplica de forma vinculante a todas las capas y componentes del monorepo:
 1. **Backend Unificado**: API REST desacoplada y agnóstica al cliente.
-2. **Frontend Web SPA**: Aplicación Web empresarial en Angular.
-3. **Móvil Nativo**: Aplicación móvil Android (Kotlin / Jetpack Compose) y su proyección futura a iOS.
+2. **Frontend Web SPA**: Aplicación Web empresarial en Angular (`apps/web`).
+3. **Móvil Nativo**: Aplicación móvil Android en Kotlin / Jetpack Compose (`apps/android`) y su proyección futura a iOS.
 4. **Librerías Compartidas**: Paquetes transversales de tipado, contratos y tokens de diseño.
+
+**Cláusula de Paridad Obligatoria Web-Android**: Todo módulo, caso de uso, pantalla o flujo funcional que se planifique, especifique o desarrolle en la plataforma MMedic **DEBE ser implementado obligatoriamente tanto para la versión Web (`apps/web`) como para la versión móvil nativa Android (`apps/android`)**, a menos que exista una excepción técnica formal debidamente justificada y documentada en la especificación (`spec.md`).
 
 Cualquier fragmento de código que incumpla las directivas aquí expuestas **será rechazado automáticamente** en las etapas de revisión por pares (*Code Review*) y validación de pipelines (*CI/CD Gates*).
 
@@ -52,9 +52,12 @@ Cualquier fragmento de código que incumpla las directivas aquí expuestas **ser
   }
   ```
 
-#### 1.3. Desacoplamiento y Proyección Mobile (Android & iOS)
-- La aplicación móvil actual (`apps/android` en Kotlin / Jetpack Compose) y la futura versión para iOS consumen exactamente los mismos endpoints y esquemas de datos que la aplicación Web SPA.
-- Ambas plataformas respetan un **Design Token System** común (paleta de color, espaciados, tipografías y radios de borde definidos de forma equivalente en CSS Tokens y temas de Compose/SwiftUI).
+#### 1.3. Desarrollo Dual Obligatorio y Paridad de Funcionalidad (Web y Android)
+- **Directiva de Desarrollo Simultáneo y Completo**: Todo nuevo requerimiento, módulo funcional, pantalla, formulario o flujo de negocio que se desarrolle en la plataforma MMedic **DEBE desarrollarse obligatoriamente para ambas plataformas clientes: la versión Web SPA (`apps/web` en Angular 19+) y la versión móvil nativa Android (`apps/android` en Kotlin / Jetpack Compose)**.
+- **Criterio de Aceptación Vinculante**: Ninguna tarea, historia de usuario o característica (*feature*) se considerará finalizada o aprobada si únicamente existe en Web o únicamente en Android. La paridad de funcionalidades es un requisito no negociable de entrega.
+- **Consumo de Contratos Compartidos**: Tanto la aplicación Web como la aplicación móvil Android consumen exactamente los mismos endpoints de la API REST (`apps/api`) y se rigen por los mismos contratos semánticos definidos en `packages/types`. Queda prohibida la divergencia de reglas de negocio entre plataformas.
+- **Design Token System Común**: Ambas plataformas respetan una identidad visual unificada derivada del **Design Token System** (paleta de colores médicos, tipografía, escalas de espaciado, radios y sombras definidos equivalentemente en CSS Tokens para Angular y temas de Jetpack Compose / `MaterialTheme` para Android).
+- **Régimen de Excepciones Formales**: Únicamente se admitirá la exclusión de una plataforma cuando la naturaleza de la funcionalidad sea intrínsecamente técnica y exclusiva de un dispositivo (ejemplo: integración directa con hardware de escaneo periférico físico de escritorio, o funcionalidades exclusivas del sistema operativo Android como sensores o intents móviles específicos), lo cual deberá quedar explícitamente fundamentado en el `spec.md` correspondiente.
 
 #### 1.4. Trazabilidad Integral y Registro Obligatorio de Errores en Base de Datos
 - **Directiva de Persistencia Obligatoria**: Todo método del backend (`apps/api`), incluyendo controladores, casos de uso, servicios de dominio, tareas en segundo plano e interceptores, debe garantizar que ante cualquier fallo, excepción no controlada o error de negocio se capture y registre de manera obligatoria una traza o log en la base de datos (PostgreSQL).
@@ -184,12 +187,22 @@ Para garantizar estabilidad y prevenir fugas de memoria (*memory leaks*):
      - Delimitación de anchos máximos (`max-w-*`) en bloques de contenido y lectura para preservar la ergonomía visual y evitar líneas excesivamente largas.
 - **Estructura Técnica de Media Queries**: Toda hoja de estilos (CSS) debe estructurarse obligatoriamente bajo enfoque Mobile-First ascendente utilizando directivas `min-width`, erradicando el uso caótico de reglas descendentes con `max-width`.
 
+#### 5.4. Notificaciones Transversales Push y Retención de Navegación
+- **Notificaciones Push Transversales**: Todas las operaciones de mutación de datos —Crear/Guardar (`save`), Actualizar (`update`) y Eliminar (`delete`)— **DEBEN** emitir una notificación visual flotante de estilo push (toast/banner con retroalimentación inmediata de éxito o error). Queda prohibido el uso de diálogos modales nativos bloqueantes (`alert()`, `confirm()`) para feedback de operaciones.
+- **Regla Estricta de Retención de Navegación en Pantalla**:
+  1. **Edición / Actualización de Elementos Existentes**: Al presionar guardar/actualizar en un formulario de edición, el sistema **NO DEBE redirigir automáticamente al índice o pantalla anterior**. Debe permanecer en la pantalla actual mostrando la notificación push de éxito, preservando el contexto del usuario. El regreso a la lista o pantalla previa es una acción explícita y voluntaria del usuario (ej. botón "Volver").
+  2. **Creación de Nuevos Elementos**: Al guardar exitosamente un elemento nuevo por primera vez, el sistema **SÍ debe redirigir al índice** o pantalla principal del módulo correspondiente tras emitir la notificación push de confirmación.
+  3. **Fallos o Errores**: Si ocurre un error en cualquier operación (crear o actualizar), el sistema **NO debe redirigir**, permaneciendo en el formulario y presentando la notificación push de error con el detalle correspondiente.
+- **Paridad Obligatoria**: Esta directiva aplica de manera idéntica y simultánea a la versión Web (`apps/web`) y a la versión Android (`apps/android`).
+
 ---
 
 ## 3. Matriz de Criterios de Aceptación Técnicos (Quality Gates)
 
 | Requisito | Métrica / Criterio Verificable | Herramienta de Auditoría |
 |---|---|---|
+| **Paridad Web y Android** | 100% de los módulos y funcionalidades de negocio implementados con interfaces funcionales tanto en Web (`apps/web`) como en Android (`apps/android`) (salvo excepción explícita en spec). | PR Reviews / CI Pipeline / Smoke Tests |
+| **Notificaciones Push y Navegación** | 100% de operaciones C/U/D con notificación push; retención en pantalla en updates, redirección sólo en creación exitosa en Web y Android. | Code Review / UI E2E Tests / Smoke Tests |
 | **Límite de Controladores** | Longitud $\le$ 80 LOC. Cero lógica de negocio. | Linter / Sonar / Code Review |
 | **Límite de Clases/Componentes** | Longitud $\le$ 300 LOC. Modularización forzosa si supera el límite. | ESLint (`max-lines`) / Detekt |
 | **Autenticación en Rutas** | 100% de endpoints privados con Guard JWT y validación de permisos. | Tests de Integración E2E |
@@ -213,7 +226,7 @@ Para garantizar estabilidad y prevenir fugas de memoria (*memory leaks*):
 
 ---
 
-**Versión Constitucional**: 2.4.0  
+**Versión Constitucional**: 2.6.0  
 **Fecha de Ratificación**: 2026-09-20  
-**Fecha de Última Enmienda**: 2026-09-20  
+**Fecha de Última Enmienda**: 2026-09-22  
 **Estado**: ACTIVA Y VINCULANTE

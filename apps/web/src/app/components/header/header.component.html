@@ -1,44 +1,473 @@
-<header class="main-header">
+<header class="main-header" (mouseleave)="closeMegaMenu()">
   <div class="header-container">
     <!-- Logotipo alineado a la izquierda -->
-    <a routerLink="/" class="brand-link" title="MMedic - Plataforma Clínica">
-      <img src="/logo.svg" alt="MMedic Logo" class="brand-logo" />
+    <a routerLink="/" class="brand-link" title="MMedic - Plataforma Clínica de Alta Precisión">
+      <div class="brand-logo-badge">M</div>
+      <div class="brand-text">
+        <span class="brand-title">MMedic</span>
+        <span class="brand-subtitle">Clinical Platform</span>
+      </div>
     </a>
 
-    <!-- Botón Hamburguesa para Mobile -->
-    <button
-      class="mobile-toggle-btn"
-      (click)="toggleMenu()"
-      aria-label="Abrir menú de navegación"
-      [attr.aria-expanded]="isMenuOpen()"
-    >
-      <span class="bar"></span>
-      <span class="bar"></span>
-      <span class="bar"></span>
-    </button>
+    <!-- Navegación Desktop -->
+    <nav class="desktop-nav">
+      <ul class="nav-links">
+        <!-- Dropdown Módulos con Mega Menu -->
+        <li
+          class="nav-link-item has-dropdown"
+          (mouseenter)="openMegaMenu()"
+          (click)="toggleMegaMenu()"
+        >
+          <button
+            type="button"
+            class="nav-link dropdown-trigger"
+            [class.active]="isMegaMenuOpen()"
+            aria-haspopup="true"
+            [attr.aria-expanded]="isMegaMenuOpen()"
+          >
+            <span>Módulos</span>
+            <span class="dropdown-chevron" [class.rotated]="isMegaMenuOpen()">▾</span>
+          </button>
+        </li>
 
-    <!-- Menú de navegación a la derecha -->
-    <nav class="nav-menu" [class.open]="isMenuOpen()">
-      <ul class="nav-list">
-        <li class="nav-item">
-          <button type="button" class="nav-btn" (click)="openModal('about')">
-            Acerca de
+        <li class="nav-link-item">
+          <button type="button" class="nav-link" (click)="openModal('about')">
+            Soluciones
           </button>
         </li>
-        <li class="nav-item">
-          <button type="button" class="nav-btn" (click)="openModal('contact')">
-            Contáctanos
+
+        <li class="nav-link-item">
+          <button type="button" class="nav-link" (click)="openModal('who')">
+            Recursos
           </button>
         </li>
-        <li class="nav-item">
-          <button type="button" class="nav-btn" (click)="openModal('who')">
-            Quiénes somos
+
+        <li class="nav-link-item">
+          <button type="button" class="nav-link" (click)="openModal('contact')">
+            Contacto
           </button>
         </li>
       </ul>
     </nav>
+
+    <!-- Acciones Derecha Desktop -->
+    <div class="header-actions">
+      <div class="tenant-badge" title="Organización activa">
+        <span class="tenant-dot"></span>
+        <span class="tenant-name">Clínica Central</span>
+      </div>
+
+      <a routerLink="/articles" class="btn-header-cta">
+        <span class="cta-icon">📦</span>
+        <span>Catálogo</span>
+      </a>
+
+      <!-- Botón Hamburguesa para Mobile -->
+      <button
+        class="mobile-toggle-btn"
+        (click)="toggleMobileMenu()"
+        aria-label="Abrir menú de navegación"
+        [attr.aria-expanded]="isMenuOpen()"
+      >
+        <span class="bar" [class.open]="isMenuOpen()"></span>
+        <span class="bar" [class.open]="isMenuOpen()"></span>
+        <span class="bar" [class.open]="isMenuOpen()"></span>
+      </button>
+    </div>
   </div>
+
+  <!-- ============================================== -->
+  <!-- MEGA MENU DESPLEGABLE (ESTILO HOSTINGER DARK)   -->
+  <!-- ============================================== -->
+  @if (isMegaMenuOpen()) {
+    <div class="mega-menu-overlay" (click)="closeMegaMenu()">
+      <div class="mega-menu-panel" (click)="$event.stopPropagation()">
+        <!-- Columna 1: Sidebar de Categorías -->
+        <aside class="mega-sidebar">
+          <span class="sidebar-caption">MÓDULOS DEL SISTEMA</span>
+          <nav class="sidebar-tabs">
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active]="activeMegaTab() === 'articles'"
+              (mouseenter)="setMegaTab('articles')"
+              (click)="setMegaTab('articles')"
+            >
+              <span class="tab-icon">📦</span>
+              <span class="tab-label">Artículos y Facturación</span>
+            </button>
+
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active]="activeMegaTab() === 'clinical'"
+              (mouseenter)="setMegaTab('clinical')"
+              (click)="setMegaTab('clinical')"
+            >
+              <span class="tab-icon">🩺</span>
+              <span class="tab-label">Gestión Clínica y Citas</span>
+            </button>
+
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active]="activeMegaTab() === 'billing'"
+              (mouseenter)="setMegaTab('billing')"
+              (click)="setMegaTab('billing')"
+            >
+              <span class="tab-icon">💳</span>
+              <span class="tab-label">Finanzas y Comisiones</span>
+            </button>
+
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active]="activeMegaTab() === 'patients'"
+              (mouseenter)="setMegaTab('patients')"
+              (click)="setMegaTab('patients')"
+            >
+              <span class="tab-icon">👥</span>
+              <span class="tab-label">Directorio de Pacientes</span>
+            </button>
+
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active]="activeMegaTab() === 'config'"
+              (mouseenter)="setMegaTab('config')"
+              (click)="setMegaTab('config')"
+            >
+              <span class="tab-icon">⚙️</span>
+              <span class="tab-label">Seguridad y Permisos</span>
+            </button>
+          </nav>
+        </aside>
+
+        <!-- Columna 2: Contenido Central en Grilla -->
+        <main class="mega-content">
+          @if (activeMegaTab() === 'articles') {
+            <div class="section-group">
+              <span class="group-title">CATÁLOGO Y PRECIOS</span>
+              <div class="cards-grid">
+                <a routerLink="/articles" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">📦</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Artículos y Productos</span>
+                      <span class="badge-new">Nuevo</span>
+                    </div>
+                    <p class="item-desc">
+                      Catálogo de servicios médicos, tarifas y hasta 4 opciones de precios.
+                    </p>
+                  </div>
+                </a>
+
+                <a routerLink="/categories" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">🏷️</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Categorías Inmutables</span>
+                    </div>
+                    <p class="item-desc">
+                      Clasificación estructurada en lista protegida contra borrado accidental.
+                    </p>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <div class="section-group">
+              <span class="group-title">PARTICIPANTES Y HONORARIOS</span>
+              <div class="cards-grid">
+                <a routerLink="/contributors" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">👨‍⚕️</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Personal/Profesionales</span>
+                      <span class="badge-pop">Popular</span>
+                    </div>
+                    <p class="item-desc">
+                      Personal clínico, profesionales y técnicos que participan en la atención de los pacientes.
+                    </p>
+                  </div>
+                </a>
+
+                <a routerLink="/entities" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">🏥</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Entidades Colaboradoras</span>
+                      <span class="badge-pop">Nuevo</span>
+                    </div>
+                    <p class="item-desc">
+                      Directorio maestro de Entidades Colaboradoras, médicos, laboratorios y convenios externos.
+                    </p>
+                  </div>
+                </a>
+
+                <a routerLink="/customers" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">👥</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Pacientes / Clientes</span>
+                      <span class="badge-pop">Nuevo</span>
+                    </div>
+                    <p class="item-desc">
+                      Directorio de pacientes, fichas clínicas, datos de contacto y facturación.
+                    </p>
+                  </div>
+                </a>
+              </div>
+            </div>
+          } @else if (activeMegaTab() === 'clinical') {
+            <div class="section-group">
+              <span class="group-title">CONSULTAS Y AGENDA MÉDICA</span>
+              <div class="cards-grid">
+                <div class="mega-item">
+                  <div class="item-icon-box">📅</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Agenda Electrónica</span>
+                      <span class="badge-tag">En desarrollo</span>
+                    </div>
+                    <p class="item-desc">Gestión integral de turnos médicos y confirmaciones.</p>
+                  </div>
+                </div>
+
+                <div class="mega-item">
+                  <div class="item-icon-box">📋</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Expediente Clínico</span>
+                    </div>
+                    <p class="item-desc">Historial médico unificado con antecedentes y diagnósticos.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          } @else if (activeMegaTab() === 'billing') {
+            <div class="section-group">
+              <span class="group-title">FACTURACIÓN Y COBRANZAS</span>
+              <div class="cards-grid">
+                <a routerLink="/invoices" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">🧾</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Gestión de Facturación</span>
+                      <span class="badge-new">Nuevo</span>
+                    </div>
+                    <p class="item-desc">Listado de facturas, cobranza mixta y control de saldos.</p>
+                  </div>
+                </a>
+
+                <a routerLink="/invoices/new" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">➕</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Emitir Nueva Factura</span>
+                      <span class="badge-pop">Popular</span>
+                    </div>
+                    <p class="item-desc">Facturación multi-precio, cálculo de IVA y cliente rápido.</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+          } @else if (activeMegaTab() === 'patients') {
+            <div class="section-group">
+              <span class="group-title">PACIENTES Y FAMILIARES</span>
+              <div class="cards-grid">
+                <a routerLink="/customers" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">🪪</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Directorio de Pacientes</span>
+                      <span class="badge-pop">Popular</span>
+                    </div>
+                    <p class="item-desc">Registro demográfico, RIF/Cédula, dirección y ficha de clientes/pacientes.</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+          } @else {
+            <div class="section-group">
+              <span class="group-title">GOBERNANZA Y CONTROL</span>
+              <div class="cards-grid">
+                <a routerLink="/users" class="mega-item" (click)="closeMegaMenu()">
+                  <div class="item-icon-box">🛡️</div>
+                  <div class="item-info">
+                    <div class="item-title-row">
+                      <span class="item-title">Usuarios y Roles</span>
+                    </div>
+                    <p class="item-desc">Control RBAC + PBAC y permisos especiales granulares.</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+          }
+        </main>
+
+        <!-- Columna 3: Tarjeta Promocional / Destacada (Acción Principal de Facturación) -->
+        <aside class="mega-featured">
+          <div class="featured-card">
+            <div class="featured-header">
+              <span class="featured-tag">MÓDULO DE FACTURACIÓN</span>
+              <span class="featured-arrow">↗</span>
+            </div>
+
+            <div class="featured-visual">
+              <div class="visual-glow"></div>
+              <div class="visual-icon">🧾✨</div>
+            </div>
+
+            <h4 class="featured-title">Emisión y Cobranza Fiscal</h4>
+            <p class="featured-desc">
+              Facturación multi-precio, cálculo exacto de IVA (16%), alta inline de clientes y cobranzas mixtas multimoneda.
+            </p>
+
+            <a routerLink="/invoices/new" class="btn-featured-cta" (click)="closeMegaMenu()">
+              + Emitir Nueva Factura
+            </a>
+
+            <a routerLink="/invoices" class="featured-secondary-link" (click)="closeMegaMenu()">
+              Gestionar Comprobantes y Saldos →
+            </a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  }
 </header>
+
+<!-- ============================================== -->
+<!-- MENÚ HAMBURGUESA / DRAWER LATERAL PARA MOBILE   -->
+<!-- ============================================== -->
+@if (isMenuOpen()) {
+  <div class="mobile-drawer-backdrop" (click)="closeMobileMenu()">
+    <div class="mobile-drawer" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <div class="brand-link">
+          <div class="brand-logo-badge">M</div>
+          <span class="brand-title">MMedic</span>
+        </div>
+        <button class="close-drawer-btn" (click)="closeMobileMenu()" aria-label="Cerrar menú">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="drawer-section">
+          <span class="drawer-section-title">FUNCIONALIDADES PRINCIPALES</span>
+          <a routerLink="/articles" class="drawer-link" (click)="closeMobileMenu()">
+            <span class="drawer-icon">📦</span>
+            <span>Artículos y Productos</span>
+            <span class="badge-new-mini">Nuevo</span>
+          </a>
+          <a routerLink="/contributors" class="drawer-link" (click)="closeMobileMenu()">
+            <span class="drawer-icon">👨‍⚕️</span>
+            <span>Personal / Colaboradores</span>
+            <span class="badge-new-mini">Nuevo</span>
+          </a>
+          <a routerLink="/customers" class="drawer-link" (click)="closeMobileMenu()">
+            <span class="drawer-icon">👥</span>
+            <span>Pacientes / Clientes</span>
+            <span class="badge-new-mini">Nuevo</span>
+          </a>
+          <a routerLink="/articles/new" class="drawer-link" (click)="closeMobileMenu()">
+            <span class="drawer-icon">➕</span>
+            <span>Nuevo Artículo / Honorarios</span>
+          </a>
+          <a routerLink="/users" class="drawer-link" (click)="closeMobileMenu()">
+            <span class="drawer-icon">🛡️</span>
+            <span>Usuarios y Roles</span>
+          </a>
+          <a routerLink="/invoices" class="drawer-link" (click)="closeMobileMenu()">
+            <span class="drawer-icon">🧾</span>
+            <span>Facturación</span>
+            <span class="badge-new-mini">Nuevo</span>
+          </a>
+        </div>
+
+        <div class="drawer-section">
+          <span class="drawer-section-title">INSTITUCIONAL</span>
+          <button type="button" class="drawer-link-btn" (click)="openModal('about')">
+            <span class="drawer-icon">ℹ️</span>
+            <span>Acerca de MMedic</span>
+          </button>
+          <button type="button" class="drawer-link-btn" (click)="openModal('contact')">
+            <span class="drawer-icon">📞</span>
+            <span>Contáctanos</span>
+          </button>
+          <button type="button" class="drawer-link-btn" (click)="openModal('who')">
+            <span class="drawer-icon">🏥</span>
+            <span>Quiénes somos</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <p class="drawer-tenant">Tenant: Clínica Central</p>
+        <span class="drawer-version">MMedic v2.5.0</span>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================== -->
+<!-- BARRA DE MENÚ INFERIOR FIJA PARA MOBILE (5 ÍCONOS) -->
+<!-- ============================================== -->
+<nav class="mobile-bottom-nav" aria-label="Navegación Móvil Principal">
+  <button
+    type="button"
+    class="bottom-nav-item"
+    [class.active]="activeBottomTab() === 'home'"
+    (click)="selectBottomTab('home')"
+    routerLink="/"
+  >
+    <span class="bottom-icon">🏠</span>
+    <span class="bottom-label">Inicio</span>
+  </button>
+
+  <button
+    type="button"
+    class="bottom-nav-item"
+    [class.active]="activeBottomTab() === 'articles'"
+    (click)="selectBottomTab('articles')"
+    routerLink="/articles"
+  >
+    <span class="bottom-icon">📦</span>
+    <span class="bottom-label">Artículos</span>
+    <span class="bottom-badge-dot"></span>
+  </button>
+
+  <button
+    type="button"
+    class="bottom-nav-item"
+    [class.active]="activeBottomTab() === 'appointments'"
+    (click)="selectBottomTab('appointments')"
+  >
+    <span class="bottom-icon">📅</span>
+    <span class="bottom-label">Citas</span>
+  </button>
+
+  <button
+    type="button"
+    class="bottom-nav-item"
+    [class.active]="activeBottomTab() === 'patients'"
+    (click)="selectBottomTab('patients')"
+    routerLink="/customers"
+  >
+    <span class="bottom-icon">👥</span>
+    <span class="bottom-label">Pacientes</span>
+  </button>
+
+  <button
+    type="button"
+    class="bottom-nav-item"
+    [class.active]="activeBottomTab() === 'more' || isMenuOpen()"
+    (click)="selectBottomTab('more')"
+  >
+    <span class="bottom-icon">☰</span>
+    <span class="bottom-label">Más</span>
+  </button>
+</nav>
 
 <!-- Modales informativos -->
 @if (activeModal(); as modal) {
@@ -60,7 +489,7 @@
           <p>
             <strong>MMedic</strong> es una plataforma clínica multi-tenant de última generación diseñada para la gestión integral de citas médicas, expedientes de salud, roles granulares y facturación clínica segura.
           </p>
-          <p class="meta-tag">Versión 2.4.0 — Arquitectura Multi-Tenant y Seguridad RBAC + PBAC.</p>
+          <p class="meta-tag">Versión 2.5.0 — Arquitectura Multi-Tenant y Paridad Web-Android.</p>
         } @else if (modal === 'contact') {
           <p>Para soporte técnico, implementaciones en centros médicos o asistencia comercial:</p>
           <ul class="contact-info">

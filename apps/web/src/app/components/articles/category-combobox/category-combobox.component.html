@@ -1,0 +1,70 @@
+<div class="combobox-container">
+  <button
+    type="button"
+    class="combobox-trigger"
+    (click)="toggleDropdown()"
+    [attr.aria-expanded]="isOpen()"
+  >
+    @if (selectedCategory()) {
+      <span class="selected-text">{{ selectedCategory()?.name }}</span>
+    } @else {
+      <span class="placeholder-text">Selecciona una categoría...</span>
+    }
+    <span class="chevron" [class.rotated]="isOpen()">▼</span>
+  </button>
+
+  @if (isOpen()) {
+    <div class="combobox-dropdown glass-panel">
+      <div class="search-box">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Buscar o escribir nueva..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          (keydown.enter)="$event.preventDefault(); createCategory()"
+          autofocus
+        />
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-banner">{{ errorMessage() }}</div>
+      }
+
+      <div class="options-list">
+        @for (category of filteredCategories(); track category.id) {
+          <button
+            type="button"
+            class="option-item"
+            [class.active]="category.id === selectedCategoryId()"
+            (click)="selectCategory(category)"
+          >
+            <span class="category-name">{{ category.name }}</span>
+            @if (category.id === selectedCategoryId()) {
+              <span class="check-icon">✓</span>
+            }
+          </button>
+        } @empty {
+          <div class="empty-state">No se encontraron categorías existentes</div>
+        }
+      </div>
+
+      @if (!hasExactMatch() && searchTerm().trim().length >= 2) {
+        <div class="create-action">
+          <button
+            type="button"
+            class="btn-create-category"
+            [disabled]="isCreating()"
+            (click)="createCategory()"
+          >
+            @if (isCreating()) {
+              <span>Creando...</span>
+            } @else {
+              <span>+ Crear categoría "<strong>{{ searchTerm().trim() }}</strong>"</span>
+            }
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

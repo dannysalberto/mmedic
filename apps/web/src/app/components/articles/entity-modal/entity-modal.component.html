@@ -1,0 +1,81 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div
+      class="modal-dialog glass-panel"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-labelledby="modal-title"
+      aria-modal="true"
+    >
+      <div class="modal-header">
+        <div>
+          <h3 id="modal-title" class="modal-title">Nueva Entidad Participante</h3>
+          <p class="modal-subtitle">Registra un médico o prestador que no existe en el catálogo</p>
+        </div>
+        <button type="button" class="btn-close" (click)="onClose()" aria-label="Cerrar modal">✕</button>
+      </div>
+
+      <form (ngSubmit)="onSubmit()" class="modal-body">
+        @if (errorMessage()) {
+          <div class="alert-error">{{ errorMessage() }}</div>
+        }
+
+        <div class="form-group">
+          <label for="entityCode" class="form-label">Código de Entidad *</label>
+          <input
+            id="entityCode"
+            type="text"
+            class="form-input"
+            placeholder="Ej: MED-CIR-01 o LAB-01"
+            [ngModel]="code()"
+            (ngModelChange)="code.set($event)"
+            name="code"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="entityName" class="form-label">Nombre / Razón Social *</label>
+          <input
+            id="entityName"
+            type="text"
+            class="form-input"
+            placeholder="Ej: Dr. Fernando Ruiz (Cirujano)"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="entityStatus" class="form-label">Estatus</label>
+          <select
+            id="entityStatus"
+            class="form-select"
+            [ngModel]="status()"
+            (ngModelChange)="status.set($event)"
+            name="status"
+          >
+            <option value="ACTIVE">Activo</option>
+            <option value="INACTIVE">Inactivo</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="isSubmitting()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <span>Guardando...</span>
+            } @else {
+              <span>Guardar e Insertar</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

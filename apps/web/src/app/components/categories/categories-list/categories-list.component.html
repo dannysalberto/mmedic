@@ -1,0 +1,172 @@
+<app-header></app-header>
+
+<main class="page-container">
+  <div class="header-banner">
+    <div>
+      <h1 class="page-title">Gestión de Categorías Inmutables</h1>
+      <p class="page-subtitle">
+        Administra las clasificaciones del catálogo de artículos. Edita con seguridad y detecta duplicados creados por error.
+      </p>
+    </div>
+    <button type="button" class="btn-create" id="btn-nueva-categoria" (click)="openCreateModal()">
+      + Nueva Categoría
+    </button>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-container">
+    <button
+      type="button"
+      id="tab-list"
+      class="tab-btn"
+      [class.active]="activeTab() === 'list'"
+      (click)="activeTab.set('list')"
+    >
+      🏷️ Todas las Categorías ({{ categories().length }})
+    </button>
+    <button
+      type="button"
+      id="tab-duplicates"
+      class="tab-btn"
+      [class.active]="activeTab() === 'duplicates'"
+      (click)="activeTab.set('duplicates')"
+    >
+      🔍 Detección de Duplicados
+    </button>
+  </div>
+
+  <!-- Tab Content: List -->
+  @if (activeTab() === 'list') {
+    <div class="content-card">
+      <div class="toolbar">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            id="input-buscar-categoria"
+            class="search-input"
+            placeholder="Buscar por nombre de categoría..."
+            (input)="onSearch($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>Cargando catálogo de categorías...</span>
+        </div>
+      } @else if (categories().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">🏷️</div>
+          <h4>No se encontraron categorías</h4>
+          <p>Ajusta el término de búsqueda o registra una nueva categoría.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre de la Categoría</th>
+                <th class="text-center">Artículos Vinc.</th>
+                <th class="text-center">Fecha de Creación</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (category of categories(); track category.id) {
+                <tr>
+                  <td class="cell-name">
+                    <div class="name-wrapper">
+                      <span class="avatar-circle">{{ category.name.substring(0, 2).toUpperCase() }}</span>
+                      <span class="name-text">{{ category.name }}</span>
+                    </div>
+                  </td>
+                  <td class="cell-articles text-center">
+                    <span class="articles-count-pill" [class.has-articles]="category.articlesCount > 0">
+                      {{ category.articlesCount }} art.
+                    </span>
+                  </td>
+                  <td class="text-center cell-date">
+                    {{ category.createdAt | date: 'dd/MM/yyyy' }}
+                  </td>
+                  <td class="cell-actions text-right">
+                    <button
+                      type="button"
+                      class="action-btn edit-btn"
+                      [id]="'btn-edit-' + category.id"
+                      (click)="openEditModal(category)"
+                      title="Editar nombre de categoría"
+                    >
+                      ✏️ Editar
+                    </button>
+                    <button
+                      type="button"
+                      class="action-btn delete-btn"
+                      [id]="'btn-delete-' + category.id"
+                      (click)="promptDelete(category)"
+                      [disabled]="category.articlesCount > 0"
+                      [title]="category.articlesCount > 0 ? 'No se puede eliminar: tiene artículos vinculados' : 'Eliminar categoría'"
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Tab Content: Duplicates -->
+    <div class="content-card p-4">
+      <app-category-duplicates></app-category-duplicates>
+    </div>
+  }
+</main>
+
+<!-- Modal de Formulario (Crear / Editar) -->
+<app-category-form-modal
+  [isOpen]="isFormModalOpen()"
+  [categoryToEdit]="selectedCategoryForEdit()"
+  (saved)="onCategorySaved()"
+  (closeModal)="closeFormModal()"
+></app-category-form-modal>
+
+<!-- Modal de Borrado Seguro -->
+@if (categoryToDelete()) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header bg-danger">
+        <h3 class="text-danger">Confirmar Eliminación de Categoría</h3>
+        <button type="button" class="btn-close" (click)="cancelDelete()">✕</button>
+      </div>
+      <div class="modal-body p-4">
+        <p>
+          ¿Está seguro de que desea eliminar permanentemente la categoría
+          <strong>"{{ categoryToDelete()?.name }}"</strong>?
+        </p>
+        <p class="text-muted small">
+          Esta acción no se puede deshacer. Se ha verificado que esta categoría posee
+          <strong>0 artículos asociados</strong>.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-danger" id="btn-confirm-delete" (click)="confirmDelete()" [disabled]="isDeleting()">
+          @if (isDeleting()) {
+            Eliminando...
+          } @else {
+            Sí, Eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

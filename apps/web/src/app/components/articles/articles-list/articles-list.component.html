@@ -1,0 +1,131 @@
+<app-header></app-header>
+<div class="page-container">
+  <div class="list-header">
+    <div>
+      <h2 class="page-title">Catálogo de Artículos y Productos</h2>
+      <p class="page-subtitle">Administra los productos y servicios médicos facturables, sus esquemas de precios y honorarios asociados.</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="goToNew()">
+      <span>+ Nuevo Artículo</span>
+    </button>
+  </div>
+
+  <!-- Barra de Filtros -->
+  <div class="filters-card glass-panel">
+    <div class="search-field">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="filter-input"
+        placeholder="Buscar por código o nombre..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event); onFilterChange()"
+      />
+    </div>
+
+    <div class="filter-dropdowns">
+      <select
+        class="filter-select"
+        [ngModel]="selectedCategoryId()"
+        (ngModelChange)="selectedCategoryId.set($event); onFilterChange()"
+      >
+        <option value="">Todas las Categorías</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.id">{{ cat.name }}</option>
+        }
+      </select>
+
+      <select
+        class="filter-select"
+        [ngModel]="selectedStatus()"
+        (ngModelChange)="selectedStatus.set($event); onFilterChange()"
+      >
+        <option value="all">Todos los Estados</option>
+        <option value="active">Solo Activos</option>
+        <option value="inactive">Solo Inactivos</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <span class="spinner">⏳</span>
+      <p>Cargando catálogo de artículos...</p>
+    </div>
+  } @else if (articles().length === 0) {
+    <!-- Empty State -->
+    <div class="empty-state glass-panel">
+      <div class="empty-icon">📦</div>
+      <h3>No se encontraron artículos</h3>
+      <p>Comienza registrando tus productos, consultas o procedimientos médicos.</p>
+      <button type="button" class="btn-primary" (click)="goToNew()">
+        + Crear Primer Artículo
+      </button>
+    </div>
+  } @else {
+    <!-- Listado Responsivo de Artículos -->
+    <div class="articles-grid">
+      @for (article of articles(); track article.id) {
+        <div class="article-card glass-panel">
+          <div class="card-header">
+            <div class="code-badge">{{ article.code }}</div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              @if (article.appliesVat) {
+                <span class="badge-pill" style="background: rgba(37, 99, 235, 0.15); color: #2563eb; font-weight: 600; font-size: 0.75rem; padding: 2px 8px; border-radius: 9999px;">IVA 16%</span>
+              }
+              <span
+                class="badge-status"
+                [class.status-active]="article.isActive"
+                [class.status-inactive]="!article.isActive"
+              >
+                {{ article.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+          </div>
+
+          <h3 class="article-title">{{ article.name }}</h3>
+
+          <div class="category-tag">
+            📁 {{ article.category?.name || 'Sin categoría' }}
+          </div>
+
+          <!-- Precios -->
+          <div class="prices-section">
+            <div class="price-main">
+              <span class="price-label">Precio 1 (Base):</span>
+              <span class="price-amount">${{ article.price1 }}</span>
+            </div>
+
+            <div class="other-prices">
+              @if (article.price2 !== null && article.price2 !== undefined) {
+                <span class="price-tag">P2: ${{ article.price2 }}</span>
+              }
+              @if (article.price3 !== null && article.price3 !== undefined) {
+                <span class="price-tag">P3: ${{ article.price3 }}</span>
+              }
+              @if (article.price4 !== null && article.price4 !== undefined) {
+                <span class="price-tag">P4: ${{ article.price4 }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- Participantes count -->
+          <div class="participants-info">
+            👥 {{ article.participants?.length || 0 }} participante(s) asociado(s)
+          </div>
+
+          <div class="card-actions">
+            <button
+              type="button"
+              class="btn-edit"
+              (click)="goToEdit(article.id)"
+            >
+              ✏️ Editar
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

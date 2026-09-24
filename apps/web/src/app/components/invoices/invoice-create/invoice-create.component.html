@@ -1,0 +1,87 @@
+<app-header></app-header>
+
+<main class="page-container">
+  <div class="header-nav-row">
+    <div class="nav-breadcrumbs">
+      <a routerLink="/invoices" class="back-link">← Volver a Facturación</a>
+      <h1 class="page-title">Emitir Nueva Factura Fiscal</h1>
+    </div>
+
+    <!-- Tipo de Venta y Acción Principal -->
+    <div class="top-actions-cluster">
+      <div class="type-selector-box">
+        <label class="type-label">Tipo de Factura:</label>
+        <div class="toggle-pills">
+          <button
+            type="button"
+            class="pill-btn"
+            [class.active]="invoiceType() === 'CASH'"
+            (click)="invoiceType.set('CASH')"
+          >
+            Contado
+          </button>
+          <button
+            type="button"
+            class="pill-btn"
+            [class.active]="invoiceType() === 'CREDIT'"
+            (click)="invoiceType.set('CREDIT')"
+          >
+            Crédito
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="btn-submit-invoice"
+        [disabled]="!canSubmit()"
+        (click)="submitInvoice()"
+      >
+        @if (isSubmitting()) {
+          Emitiendo...
+        } @else {
+          ✓ Emitir Factura (${{ totals().total.toFixed(3) }})
+        }
+      </button>
+    </div>
+  </div>
+
+  <div class="form-body">
+    <!-- Paso 1: Cliente Fiscal -->
+    <app-customer-inline-form
+      (customerSelected)="onCustomerSelected($event)"
+    ></app-customer-inline-form>
+
+    <!-- Paso 2: Renglones de Artículos e IVA -->
+    <app-invoice-items-table
+      (itemsChanged)="onItemsChanged($event)"
+      (totalsChanged)="onTotalsChanged($event)"
+    ></app-invoice-items-table>
+
+    <!-- Paso 3: Cobranzas y Pagos Mixtos -->
+    <app-invoice-payment-section
+      [totalInvoice]="totals().total"
+      (initialPaymentsChanged)="onPaymentsChanged($event)"
+    ></app-invoice-payment-section>
+
+    <!-- Observaciones Finales -->
+    <div class="notes-section glass-panel mt-md">
+      <label class="form-label">Observaciones o Notas de la Factura (Opcional)</label>
+      <textarea
+        class="form-input"
+        rows="2"
+        placeholder="Ej: Paciente remitido de seguro, autorización telefónica..."
+        [ngModel]="notes()"
+        (ngModelChange)="notes.set($event)"
+      ></textarea>
+    </div>
+  </div>
+</main>
+
+<!-- Modal de Factura Emitida para Impresión / WhatsApp / Correo -->
+@if (createdInvoice(); as inv) {
+  <app-invoice-preview-modal
+    [invoice]="inv"
+    (closed)="onModalClosed()"
+  ></app-invoice-preview-modal>
+}

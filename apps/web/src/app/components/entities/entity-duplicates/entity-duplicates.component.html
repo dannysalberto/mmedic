@@ -1,0 +1,114 @@
+<div class="duplicates-container">
+  <div class="duplicates-header">
+    <div>
+      <h3 class="title">Detección y Consolidación de Duplicados</h3>
+      <p class="subtitle">
+        Analiza coincidencias de nombres normalizados para identificar colaboradores registrados múltiples veces por error humano.
+      </p>
+    </div>
+    <button type="button" class="btn-refresh" (click)="fetchDuplicates()" [disabled]="isLoading()">
+      ⚡ Analizar Nuevamente
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner-large"></div>
+      <span>Analizando entidades y buscando coincidencias...</span>
+    </div>
+  } @else if (duplicates().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">✨</div>
+      <h4>¡Excelente! No se detectaron duplicados</h4>
+      <p>Todos los colaboradores registrados poseen nombres y códigos únicos en el sistema.</p>
+    </div>
+  } @else {
+    <div class="groups-grid">
+      @for (group of duplicates(); track group.normalizedName) {
+        <div class="group-card">
+          <div class="group-card-header">
+            <div class="group-tag">
+              <span class="badge-similarity">Coincidencia ~{{ group.matchScore }}%</span>
+              <span class="group-title">Grupo: {{ group.entities[0].name }}</span>
+            </div>
+            <button type="button" class="btn-merge" (click)="openMergeModal(group)">
+              🔗 Consolidar Grupo
+            </button>
+          </div>
+
+          <div class="entities-subtable">
+            @for (entity of group.entities; track entity.id) {
+              <div class="entity-item">
+                <div class="entity-info">
+                  <span class="entity-code">{{ entity.code }}</span>
+                  <span class="entity-name">{{ entity.name }}</span>
+                </div>
+                <div class="entity-meta">
+                  <span class="badge-articles">{{ entity.articlesCount }} art.</span>
+                  <span class="badge-status" [ngClass]="'status-' + entity.status.toLowerCase()">
+                    {{ entity.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal de Fusión de Entidades -->
+@if (selectedGroup()) {
+  <div class="modal-backdrop" (click)="closeMergeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Consolidación de Colaborador</h3>
+        <button type="button" class="btn-close" (click)="closeMergeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="merge-description">
+          Seleccione la <strong>Entidad Principal</strong> (la que conservará el código y datos) y la <strong>Entidad Secundaria</strong> (la redundante que se eliminará tras reasignar sus participaciones).
+        </p>
+
+        <div class="merge-selectors">
+          <div class="select-box">
+            <label class="select-label">1. Entidad Principal (CONSERVAR):</label>
+            <select class="form-control" [value]="primaryId()" (change)="primaryId.set($any($event.target).value)">
+              @for (entity of selectedGroup()!.entities; track entity.id) {
+                <option [value]="entity.id">
+                  [{{ entity.code }}] {{ entity.name }} ({{ entity.articlesCount }} art.)
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="select-box">
+            <label class="select-label">2. Entidad Secundaria (ELIMINAR / FUSIONAR):</label>
+            <select class="form-control" [value]="secondaryId()" (change)="secondaryId.set($any($event.target).value)">
+              @for (entity of selectedGroup()!.entities; track entity.id) {
+                <option [value]="entity.id">
+                  [{{ entity.code }}] {{ entity.name }} ({{ entity.articlesCount }} art.)
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeMergeModal()" [disabled]="isMerging()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-danger-action" (click)="executeMerge()" [disabled]="isMerging() || primaryId() === secondaryId()">
+          @if (isMerging()) {
+            Fusionando...
+          } @else {
+            Confirmar Fusión Atómica
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

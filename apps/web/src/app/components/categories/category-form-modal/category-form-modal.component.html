@@ -1,0 +1,57 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          {{ categoryToEdit() ? 'Editar Categoría' : 'Nueva Categoría' }}
+        </h3>
+        <button type="button" class="btn-close" id="btn-cerrar-modal-categoria" (click)="onClose()">✕</button>
+      </div>
+
+      <form (submit)="$event.preventDefault(); onSubmit()" class="modal-form">
+        @if (errorMessage()) {
+          <div class="alert-error" role="alert">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="form-label" for="input-categoria-nombre">Nombre de la Categoría *</label>
+          <input
+            type="text"
+            id="input-categoria-nombre"
+            class="form-control"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            placeholder="Ej: Consultas Médicas, Procedimientos Quirúrgicos"
+            required
+            [disabled]="isSubmitting()"
+            autofocus
+          />
+          <span class="form-hint">Entre 2 y 100 caracteres. Nombre único por organización.</span>
+        </div>
+
+        @if (categoryToEdit()) {
+          <div class="info-banner">
+            <span class="info-icon">ℹ️</span>
+            <span>Al guardar los cambios, permanecerás en esta pantalla (Constitución §5.4).</span>
+          </div>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="btn-cancelar-categoria" (click)="onClose()" [disabled]="isSubmitting()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" id="btn-guardar-categoria" [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <span class="spinner"></span> Guardando...
+            } @else {
+              {{ categoryToEdit() ? 'Guardar Cambios' : 'Crear Categoría' }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

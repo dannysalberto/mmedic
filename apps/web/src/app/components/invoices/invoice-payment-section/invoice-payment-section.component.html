@@ -1,0 +1,180 @@
+<div class="payments-section glass-panel">
+  <div class="section-header">
+    <div>
+      <h3 class="section-title">3. Cobranzas y Pagos Recibidos (Pagos Mixtos)</h3>
+      <span class="section-hint">Admite Efectivo, Tarjetas, Cashea, Binance, Transferencia</span>
+    </div>
+    <div
+      class="balance-summary-badge clickable-badge"
+      (click)="fillPendingBalance()"
+      title="Haga clic para imputar el saldo total pendiente"
+    >
+      <span>Saldo Pendiente:</span>
+      <strong class="balance-amount">${{ pendingBalance().toFixed(3) }}</strong>
+      @if (pendingBalance() > 0) {
+        <span class="badge-action-hint">⚡ Usar Saldo</span>
+      }
+    </div>
+  </div>
+
+  <!-- Formulario de Nuevo Pago -->
+  <div class="payment-form-grid">
+    <div class="form-group">
+      <label class="form-label">Método de Pago *</label>
+      <select
+        class="form-select"
+        [ngModel]="selectedMethod()"
+        (ngModelChange)="selectedMethod.set($event)"
+      >
+        <option value="CASH">💵 Efectivo</option>
+        <option value="CARD">💳 Tarjeta Débito / Crédito</option>
+        <option value="CASHEA">🟡 Cashea</option>
+        <option value="BINANCE">🪙 Binance Pay / USDT</option>
+        <option value="TRANSFER">🏦 Transferencia Bancaria</option>
+        <option value="OTHER">📁 Otro Medio</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Monto a Imputar ($) *</label>
+      <input
+        type="number"
+        class="form-input"
+        placeholder="0.000"
+        step="0.001"
+        [ngModel]="amountInput()"
+        (ngModelChange)="amountInput.set($event)"
+      />
+    </div>
+
+    @if (selectedMethod() === 'CASH') {
+      <div class="form-group">
+        <label class="form-label">Efectivo Entregado por Cliente ($)</label>
+        <input
+          type="number"
+          class="form-input"
+          placeholder="Monto entregado"
+          step="0.001"
+          [ngModel]="receivedAmountInput()"
+          (ngModelChange)="receivedAmountInput.set($event)"
+        />
+      </div>
+    }
+
+    <div class="form-group">
+      <label class="form-label">Referencia / Lote / Hash</label>
+      <input
+        type="text"
+        class="form-input"
+        placeholder="Ej: REF-984321"
+        [ngModel]="referenceInput()"
+        (ngModelChange)="referenceInput.set($event)"
+      />
+    </div>
+
+    <div class="form-group btn-col">
+      <label class="form-label">&nbsp;</label>
+      <button
+        type="button"
+        class="btn-primary"
+        [disabled]="isSubmitting() || !amountInput() || amountInput()! <= 0"
+        (click)="addPayment()"
+      >
+        + Registrar Cobro
+      </button>
+    </div>
+  </div>
+
+  <!-- Aviso y Cálculo de Vuelto -->
+  @if (selectedMethod() === 'CASH' && changeCalculated() > 0) {
+    <div class="change-banner">
+      <div class="change-icon">💰</div>
+      <div class="change-text">
+        <span>VUELTO A ENTREGAR AL CLIENTE:</span>
+        <strong class="change-val">${{ changeCalculated().toFixed(3) }}</strong>
+      </div>
+    </div>
+  }
+
+  <!-- Lista de Pagos Registrados -->
+  <div class="payments-list-wrapper mt-md">
+    <h4 class="sub-title">Pagos Aplicados a la Factura</h4>
+    @if (currentPaymentsList().length === 0) {
+      <div class="no-payments-msg">
+        No se han registrado cobros aún. La factura permanecerá como <strong>PENDIENTE</strong>.
+      </div>
+    } @else {
+      <div class="payments-table-container">
+        <table class="payments-table">
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Monto Imputado</th>
+              <th>Recibido</th>
+              <th>Vuelto</th>
+              <th>Referencia</th>
+              @if (isAdmin()) {
+                <th style="width: 50px;"></th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of currentPaymentsList(); track $index; let idx = $index) {
+              <tr>
+                <td>
+                  <span class="method-badge">{{ p.paymentMethod }}</span>
+                </td>
+                <td class="font-mono font-bold text-accent">
+                  ${{ (+p.amount).toFixed(3) }}
+                </td>
+                <td class="font-mono">
+                  {{ p.receivedAmount ? '$' + (+p.receivedAmount).toFixed(3) : '-' }}
+                </td>
+                <td class="font-mono">
+                  @if ($any(p).changeAmount && +$any(p).changeAmount > 0) {
+                    <span class="change-tag">${{ (+$any(p).changeAmount).toFixed(3) }}</span>
+                  } @else {
+                    -
+                  }
+                </td>
+                <td>{{ p.reference || '-' }}</td>
+                @if (isAdmin()) {
+                  <td class="text-center">
+                    <button
+                      type="button"
+                      class="btn-delete-payment"
+                      title="Eliminar pago (Solo Admin)"
+                      (click)="promptDeletePayment(invoiceId() ? ($any(p).id) : idx.toString(), +p.amount)"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modal de Confirmación de Borrado de Pago -->
+@if (paymentToDelete()) {
+  <div class="modal-backdrop">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h3 class="modal-title text-danger">Confirmar Eliminación de Pago</h3>
+        <button type="button" class="btn-close" (click)="cancelDelete()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>¿Está seguro de que desea eliminar este cobro por un monto de <strong>${{ paymentToDelete()!.amount.toFixed(3) }}</strong>?</p>
+        <p class="warning-text">⚠️ Esta acción recalculará el saldo de la factura. Si estaba Pagada, su estatus regresará automáticamente a <strong>PENDIENTE</strong>.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="cancelDelete()">Cancelar</button>
+        <button type="button" class="btn-danger" (click)="confirmDelete()">Eliminar Pago</button>
+      </div>
+    </div>
+  </div>
+}

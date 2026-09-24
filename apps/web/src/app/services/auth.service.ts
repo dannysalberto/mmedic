@@ -19,6 +19,7 @@ export class AuthService {
 
   readonly isAuthenticated = computed(() => !!this.token());
   readonly isSuperAdmin = computed(() => this.currentUser()?.role === 'ROL_SUPERADMIN');
+  readonly isAdmin = computed(() => this.currentUser()?.role === 'ROL_ADMIN' || this.currentUser()?.role === 'ROL_SUPERADMIN');
 
   login(credentials: LoginDto): Observable<ApiResponse<LoginResponseData>> {
     return this.http.post<ApiResponse<LoginResponseData>>(`${this.apiUrl}/login`, credentials).pipe(

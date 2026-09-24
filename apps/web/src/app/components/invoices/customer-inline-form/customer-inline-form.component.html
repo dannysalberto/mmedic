@@ -1,0 +1,229 @@
+<div class="customer-section glass-panel">
+  <div class="section-header">
+    <div>
+      <h3 class="section-title">1. Datos Fiscales del Cliente</h3>
+      <span class="section-hint">RIF / Cédula, Nombre, Teléfono y Dirección</span>
+    </div>
+    @if (selectedCustomer()) {
+      <button type="button" class="btn-text-danger" (click)="clearSelection()">
+        Cambiar Cliente
+      </button>
+    }
+  </div>
+
+  @if (selectedCustomer(); as c) {
+    <!-- Cliente Seleccionado Activo -->
+    <div class="selected-customer-card">
+      <div class="customer-badge">
+        <span class="tax-id-tag">{{ c.taxId }}</span>
+        <span class="verified-badge">✓ Verificado</span>
+      </div>
+      <div class="customer-details">
+        <h4 class="customer-name">{{ c.name }}</h4>
+        <div class="customer-meta">
+          <span>📞 {{ c.phone }}</span>
+          <span>📍 {{ c.address }}</span>
+          @if (c.email) {
+            <span>✉️ {{ c.email }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Buscador de Cliente -->
+    <div class="search-bar-row">
+      <div class="search-input-wrapper">
+        <span class="search-icon clickable-icon" (click)="openCustomerSearchModal()" title="Abrir catálogo de clientes">🔍</span>
+        <input
+          type="text"
+          class="form-input search-input"
+          placeholder="Ingrese RIF o Cédula (Ej: J-12345678-9, V-18765432)"
+          [ngModel]="searchTaxId()"
+          (ngModelChange)="searchTaxId.set($event)"
+          (keydown.enter)="onSearch()"
+        />
+      </div>
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="onSearch()"
+      >
+        @if (isSearching()) {
+          Buscando...
+        } @else {
+          Buscar
+        }
+      </button>
+      <button type="button" class="btn-secondary" (click)="openCustomerSearchModal()" title="Buscar cliente en el catálogo">
+        📋 Catálogo
+      </button>
+      <button type="button" class="btn-secondary" (click)="openCreateModal()">
+        + Nuevo Cliente
+      </button>
+    </div>
+  }
+</div>
+
+<!-- Modal de Catálogo y Selección de Clientes -->
+@if (showSearchModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-dialog modal-lg glass-panel">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Catálogo de Clientes Fiscales</h3>
+          <span class="section-hint">Seleccione un cliente para asociarlo a la factura</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeCustomerSearchModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="search-bar-row mb-md">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              class="form-input search-input"
+              placeholder="Filtrar por RIF, cédula, nombre..."
+              [ngModel]="pickerSearchFilter()"
+              (ngModelChange)="pickerSearchFilter.set($event); loadCustomersForPicker($event)"
+            />
+          </div>
+          <button type="button" class="btn-secondary" (click)="closeCustomerSearchModal(); openCreateModal()">
+            + Nuevo Cliente
+          </button>
+        </div>
+
+        <div class="table-responsive picker-table-container">
+          <table class="picker-table">
+            <thead>
+              <tr>
+                <th>RIF / Cédula</th>
+                <th>Nombre o Razón Social</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th class="text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of customerList(); track c.id) {
+                <tr>
+                  <td><span class="tax-id-tag-sm">{{ c.taxId }}</span></td>
+                  <td class="font-medium text-primary">{{ c.name }}</td>
+                  <td>{{ c.phone }}</td>
+                  <td class="text-truncate">{{ c.address }}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn-select-item" (click)="selectCustomerFromPicker(c)">
+                      Seleccionar
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="text-center py-lg text-muted">
+                    @if (isPickerLoading()) {
+                      Cargando clientes...
+                    } @else {
+                      No se encontraron clientes con el filtro ingresado.
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeCustomerSearchModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal de Registro Rápido de Cliente Fiscal -->
+@if (showModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h3 class="modal-title">Registrar Nuevo Cliente Fiscal</h3>
+        <button type="button" class="btn-close" (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">RIF / Cédula Fiscal *</label>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="Ej: J-30456789-0 o V-19876543"
+            [ngModel]="modalTaxId()"
+            (ngModelChange)="modalTaxId.set($event)"
+            required
+          />
+        </div>
+
+        <div class="form-group mt-sm">
+          <label class="form-label">Nombre o Razón Social *</label>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="Ej: Inversiones Médicas Caracas C.A."
+            [ngModel]="modalName()"
+            (ngModelChange)="modalName.set($event)"
+            required
+          />
+        </div>
+
+        <div class="grid-2-col mt-sm">
+          <div class="form-group">
+            <label class="form-label">Teléfono *</label>
+            <input
+              type="text"
+              class="form-input"
+              placeholder="Ej: 04141234567"
+              [ngModel]="modalPhone()"
+              (ngModelChange)="modalPhone.set($event)"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Correo Electrónico (Opcional)</label>
+            <input
+              type="email"
+              class="form-input"
+              placeholder="cliente@correo.com"
+              [ngModel]="modalEmail()"
+              (ngModelChange)="modalEmail.set($event)"
+            />
+          </div>
+        </div>
+
+        <div class="form-group mt-sm">
+          <label class="form-label">Dirección Fiscal *</label>
+          <textarea
+            class="form-input"
+            rows="2"
+            placeholder="Ej: Av. Principal, Edif. Torre Centro, Local 1"
+            [ngModel]="modalAddress()"
+            (ngModelChange)="modalAddress.set($event)"
+            required
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeModal()" [disabled]="isSaving()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-primary" (click)="saveCustomer()" [disabled]="isSaving()">
+          @if (isSaving()) {
+            Guardando...
+          } @else {
+            Guardar y Asociar a Factura
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

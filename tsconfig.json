@@ -1,0 +1,21 @@
+{
+  "extends": "./packages/tsconfig/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@mmedic/types": [
+        "./packages/types/src/index.ts",
+        "./packages/types/dist/index.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "specs/**/*",
+    "packages/**/*",
+    "apps/**/*"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist"
+  ]
+}

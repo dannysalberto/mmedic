@@ -1,0 +1,75 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-card" (click)="$event.stopPropagation()" role="dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          {{ entityToEdit() ? 'Editar Entidad Colaboradora' : 'Nueva Entidad Colaboradora' }}
+        </h3>
+        <button type="button" class="btn-close" (click)="onClose()">✕</button>
+      </div>
+
+      <form (submit)="$event.preventDefault(); onSubmit()" class="modal-form">
+        @if (errorMessage()) {
+          <div class="alert-error">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="form-label">Código de Entidad / Médico *</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="code()"
+            (ngModelChange)="code.set($event.toUpperCase())"
+            name="code"
+            placeholder="Ej: MED-001, LAB-CENTRAL"
+            required
+            [disabled]="isSubmitting()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nombre del Colaborador / Entidad *</label>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            placeholder="Ej: Dr. Roberto Gómez"
+            required
+            [disabled]="isSubmitting()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Estado de Operación</label>
+          <select
+            class="form-control"
+            [ngModel]="status()"
+            (ngModelChange)="status.set($event)"
+            name="status"
+            [disabled]="isSubmitting()"
+          >
+            <option value="ACTIVE">Activo (Disponible para comisiones)</option>
+            <option value="INACTIVE">Inactivo (Suspendido)</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="onClose()" [disabled]="isSubmitting()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <span class="spinner"></span> Guardando...
+            } @else {
+              {{ entityToEdit() ? 'Guardar Cambios' : 'Registrar Entidad' }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

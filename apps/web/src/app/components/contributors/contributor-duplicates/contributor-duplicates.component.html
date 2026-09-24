@@ -1,0 +1,139 @@
+<div class="duplicates-container">
+  <div class="duplicates-header">
+    <div class="duplicates-info">
+      <h3 class="section-title">Análisis Inteligente de Personal Duplicado</h3>
+      <p class="section-desc">
+        El algoritmo analiza variaciones ortográficas, prefijos (Dr., Dra., Lic., Téc.) y títulos para sugerir registros de personal que corresponden a la misma persona física.
+      </p>
+    </div>
+    <button type="button" class="btn-refresh" (click)="fetchDuplicates()" [disabled]="isLoading()">
+      🔄 {{ isLoading() ? 'Analizando...' : 'Volver a Escanear' }}
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <span>Escaneando y evaluando coincidencias fonéticas de personal...</span>
+    </div>
+  } @else if (duplicates().length === 0) {
+    <div class="clean-state">
+      <div class="clean-icon">✨</div>
+      <h4>¡No se detectaron registros duplicados!</h4>
+      <p>Todos los profesionales y técnicos registrados en esta institución poseen nombres únicos.</p>
+    </div>
+  } @else {
+    <div class="duplicates-list">
+      @for (group of duplicates(); track group.normalizedName) {
+        <div class="duplicate-group-card">
+          <div class="group-header">
+            <div class="badge-confidence">
+              Coincidencia: <strong>{{ group.matchScore }}%</strong>
+            </div>
+            <span class="normalized-tag">Firma normalizada: <code>{{ group.normalizedName }}</code></span>
+          </div>
+
+          <div class="candidates-table-container">
+            <table class="candidates-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre Registrado</th>
+                  <th class="text-center">Estado</th>
+                  <th class="text-center">Asociaciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (contributor of group.contributors; track contributor.id) {
+                  <tr>
+                    <td><code>{{ contributor.code }}</code></td>
+                    <td class="candidate-name">{{ contributor.name }}</td>
+                    <td class="text-center">
+                      <span class="status-badge" [class.active]="contributor.status === 'ACTIVE'">
+                        {{ contributor.status }}
+                      </span>
+                    </td>
+                    <td class="text-center">{{ contributor.articlesCount }} reg.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="group-actions">
+            <button type="button" class="btn-merge-action" (click)="openMergeModal(group)">
+              ⚡ Consolidar y Fusionar Perfiles
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal de Fusión -->
+@if (selectedGroup()) {
+  <div class="modal-backdrop" (click)="closeMergeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Consolidar Perfiles Duplicados</h3>
+        <button type="button" class="btn-close" (click)="closeMergeModal()">✕</button>
+      </div>
+
+      <div class="modal-body p-4">
+        <p class="modal-intro">
+          Seleccione cuál perfil permanecerá como <strong>Maestro / Principal</strong> y cuál será <strong>Fusionado y Eliminado</strong>:
+        </p>
+
+        <div class="merge-selectors">
+          <div class="selector-group">
+            <label class="form-label text-success">🌟 Perfil Principal (Se Consignará Todo Aquí):</label>
+            <select
+              class="form-control"
+              [ngModel]="primaryId()"
+              (ngModelChange)="primaryId.set($event)"
+            >
+              @for (c of selectedGroup()?.contributors; track c.id) {
+                <option [value]="c.id" [disabled]="c.id === secondaryId()">
+                  {{ c.name }} ({{ c.code }}) - {{ c.articlesCount }} reg.
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="selector-group">
+            <label class="form-label text-danger">🗑️ Perfil Secundario (Se fusionará y removerá):</label>
+            <select
+              class="form-control"
+              [ngModel]="secondaryId()"
+              (ngModelChange)="secondaryId.set($event)"
+            >
+              @for (c of selectedGroup()?.contributors; track c.id) {
+                <option [value]="c.id" [disabled]="c.id === primaryId()">
+                  {{ c.name }} ({{ c.code }}) - {{ c.articlesCount }} reg.
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          ⚠️ <strong>Atención:</strong> Las referencias del perfil secundario se transferirán atómicamente al perfil principal. El perfil secundario será eliminado de forma definitiva.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeMergeModal()" [disabled]="isMerging()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-confirm-merge" (click)="executeMerge()" [disabled]="isMerging()">
+          @if (isMerging()) {
+            Procesando Fusión...
+          } @else {
+            Confirmar y Fusionar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

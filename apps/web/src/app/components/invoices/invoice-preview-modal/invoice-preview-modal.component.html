@@ -1,0 +1,183 @@
+<div class="modal-backdrop">
+  <div class="modal-container">
+    <!-- Barra de Acciones de la Modal (No se imprime) -->
+    <div class="modal-actions-bar no-print">
+      <div class="actions-left">
+        <span class="preview-title">Previsualización de Factura Fiscal</span>
+      </div>
+      <div class="actions-right">
+        <button type="button" class="btn-action btn-print" (click)="printInvoice()">
+          🖨️ Imprimir Factura
+        </button>
+        <button type="button" class="btn-action btn-whatsapp" (click)="shareWhatsApp()">
+          💬 Enviar WhatsApp
+        </button>
+        <button
+          type="button"
+          class="btn-action btn-email"
+          [disabled]="isSendingEmail()"
+          (click)="sendEmail()"
+        >
+          ✉️ Enviar Correo
+        </button>
+        <button type="button" class="btn-action btn-close-modal" (click)="close()">
+          ✕ Cerrar
+        </button>
+      </div>
+    </div>
+
+    <!-- Comprobante Imprimible de Factura -->
+    <div class="invoice-printable-sheet" id="invoice-sheet">
+      <!-- Encabezado de la Factura -->
+      <div class="invoice-header">
+        <div class="clinic-info">
+          <h2 class="clinic-brand">MMedic Health System</h2>
+          <p class="clinic-meta">Servicios Médicos Especializados y Hospitalarios</p>
+          <p class="clinic-meta">RIF: J-00000000-0 | Tel: (0212) 555-0000</p>
+          <p class="clinic-meta">Caracas, Venezuela</p>
+        </div>
+        <div class="invoice-title-block">
+          <div class="doc-badge">FACTURA</div>
+          <div class="invoice-number-tag">{{ invoice.invoiceNumber }}</div>
+          <div class="invoice-status-row">
+            <span class="status-badge" [attr.data-status]="invoice.status">
+              {{ invoice.status }}
+            </span>
+            <span class="type-badge">{{ invoice.type === 'CASH' ? 'CONTADO' : 'CRÉDITO' }}</span>
+          </div>
+          <div class="date-tag">Fecha: {{ invoice.issueDate | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Ficha Fiscal del Cliente -->
+      <div class="client-fiscal-grid">
+        <div class="fiscal-col">
+          <span class="fiscal-label">CLIENTE / RAZÓN SOCIAL:</span>
+          <strong class="fiscal-val">{{ invoice.customer.name }}</strong>
+        </div>
+        <div class="fiscal-col">
+          <span class="fiscal-label">RIF / CÉDULA:</span>
+          <strong class="fiscal-val font-mono">{{ invoice.customer.taxId }}</strong>
+        </div>
+        <div class="fiscal-col">
+          <span class="fiscal-label">TELÉFONO:</span>
+          <span class="fiscal-val">{{ invoice.customer.phone }}</span>
+        </div>
+        <div class="fiscal-col">
+          <span class="fiscal-label">CORREO:</span>
+          <span class="fiscal-val">{{ invoice.customer.email || 'N/A' }}</span>
+        </div>
+        <div class="fiscal-col col-span-2">
+          <span class="fiscal-label">DIRECCIÓN FISCAL:</span>
+          <span class="fiscal-val">{{ invoice.customer.address }}</span>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Tabla de Renglones Detallados -->
+      <table class="invoice-detail-table">
+        <thead>
+          <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 12%;">Código</th>
+            <th style="width: 33%;">Descripción del Concepto / Servicio</th>
+            <th style="width: 8%; text-align: center;">Cant.</th>
+            <th style="width: 12%; text-align: right;">Base Unit.</th>
+            <th style="width: 10%; text-align: right;">IVA Unit.</th>
+            <th style="width: 10%; text-align: right;">Subtotal</th>
+            <th style="width: 10%; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of invoice.items; track item.id; let idx = $index) {
+            <tr>
+              <td>{{ idx + 1 }}</td>
+              <td class="font-mono">{{ item.article?.code || 'ART' }}</td>
+              <td>
+                <div class="item-name">{{ item.article?.name || 'Concepto Médico' }}</div>
+                <div class="item-doc">Médico: {{ item.contributor?.name || item.entity?.name || 'Clínica MMedic' }}</div>
+              </td>
+              <td style="text-align: center;">{{ (+item.quantity).toFixed(0) }}</td>
+              <td style="text-align: right;" class="font-mono">${{ (+item.basePrice).toFixed(3) }}</td>
+              <td style="text-align: right;" class="font-mono">
+                {{ +item.vatAmount > 0 ? '$' + (+item.vatAmount).toFixed(3) : '$0.000' }}
+              </td>
+              <td style="text-align: right;" class="font-mono">${{ (+item.subtotal).toFixed(3) }}</td>
+              <td style="text-align: right;" class="font-mono font-bold">${{ (+item.total).toFixed(3) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Resumen Económico y Pagos -->
+      <div class="summary-and-payments-grid">
+        <!-- Pagos Recibidos y Vuelto -->
+        <div class="invoice-payments-box">
+          <h4 class="box-title">Historial de Cobros y Pagos</h4>
+          @if (invoice.payments.length === 0) {
+            <p class="no-payments-text">No se han registrado cobros. Saldo pendiente total.</p>
+          } @else {
+            <table class="mini-payments-table">
+              <thead>
+                <tr>
+                  <th>Método</th>
+                  <th>Monto</th>
+                  <th>Recibido</th>
+                  <th>Vuelto</th>
+                  <th>Ref</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of invoice.payments; track p.id) {
+                  <tr>
+                    <td><strong>{{ p.paymentMethod }}</strong></td>
+                    <td class="font-mono">${{ (+p.amount).toFixed(3) }}</td>
+                    <td class="font-mono">{{ p.receivedAmount ? '$' + (+p.receivedAmount).toFixed(3) : '-' }}</td>
+                    <td class="font-mono">{{ p.changeAmount ? '$' + (+p.changeAmount).toFixed(3) : '-' }}</td>
+                    <td>{{ p.reference || '-' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+          @if (invoice.notes) {
+            <div class="notes-box">
+              <strong>Observaciones:</strong> {{ invoice.notes }}
+            </div>
+          }
+        </div>
+
+        <!-- Totales Finales -->
+        <div class="invoice-totals-box">
+          <div class="tot-row">
+            <span>Subtotal (Base Imponible):</span>
+            <span class="font-mono">${{ (+invoice.subtotal).toFixed(3) }}</span>
+          </div>
+          <div class="tot-row">
+            <span>Impuesto IVA (16%):</span>
+            <span class="font-mono">${{ (+invoice.vatAmount).toFixed(3) }}</span>
+          </div>
+          <div class="tot-row tot-grand">
+            <span>TOTAL GENERAL:</span>
+            <span class="font-mono">${{ (+invoice.total).toFixed(3) }}</span>
+          </div>
+          <div class="tot-row tot-paid">
+            <span>Total Pagado:</span>
+            <span class="font-mono">${{ (+invoice.totalPaid).toFixed(3) }}</span>
+          </div>
+          <div class="tot-row tot-due">
+            <span>Saldo Restante:</span>
+            <span class="font-mono">${{ (+invoice.balanceDue).toFixed(3) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="invoice-footer">
+        <p>Documento generado electrónicamente por MMedic Health System.</p>
+      </div>
+    </div>
+  </div>
+</div>

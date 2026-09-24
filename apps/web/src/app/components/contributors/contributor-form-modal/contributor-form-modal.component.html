@@ -1,0 +1,99 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          {{ contributorToEdit() ? 'Editar Colaborador / Profesional' : 'Nuevo Colaborador / Profesional' }}
+        </h3>
+        <button type="button" class="btn-close" (click)="onClose()" title="Cerrar modal">✕</button>
+      </div>
+
+      <form class="modal-form" (ngSubmit)="onSubmit()">
+        @if (errorMessage()) {
+          <div class="alert-error">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="form-label" for="contributor-code">Código Único / Colegiatura *</label>
+          <input
+            id="contributor-code"
+            type="text"
+            class="form-control"
+            placeholder="Ej: MED-001, TEC-102, COL-4589"
+            [ngModel]="code()"
+            (ngModelChange)="code.set($event)"
+            name="code"
+            required
+            [disabled]="isSubmitting()"
+          />
+          <span class="form-hint">Identificador único dentro de la institución</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contributor-name">Nombre Completo y Especialidad *</label>
+          <input
+            id="contributor-name"
+            type="text"
+            class="form-control"
+            placeholder="Ej: Dr. Roberto Mendoza (Cardiología)"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            required
+            [disabled]="isSubmitting()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contributor-entity">Entidad Colaboradora (Definición de Porcentajes / Tipo) *</label>
+          <select
+            id="contributor-entity"
+            class="form-control"
+            [ngModel]="entityId()"
+            (ngModelChange)="entityId.set($event)"
+            name="entityId"
+            [disabled]="isSubmitting()"
+          >
+            <option value="">-- Seleccionar Entidad Colaboradora --</option>
+            @for (ent of availableEntities(); track ent.id) {
+              <option [value]="ent.id">
+                {{ ent.code }} - {{ ent.name }}
+              </option>
+            }
+          </select>
+          <span class="form-hint">La entidad define la regla de porcentaje que corresponderá a este médico o técnico</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contributor-status">Estado Operativo</label>
+          <select
+            id="contributor-status"
+            class="form-control"
+            [ngModel]="status()"
+            (ngModelChange)="status.set($event)"
+            name="status"
+            [disabled]="isSubmitting()"
+          >
+            <option value="ACTIVE">Activo</option>
+            <option value="INACTIVE">Inactivo</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="isSubmitting()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              Guardando...
+            } @else {
+              {{ contributorToEdit() ? 'Guardar Cambios' : 'Crear Colaborador' }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

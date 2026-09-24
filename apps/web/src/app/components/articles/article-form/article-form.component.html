@@ -1,0 +1,224 @@
+<app-header></app-header>
+<div class="page-container">
+  <div class="form-header">
+    <div class="breadcrumb">
+      <a routerLink="/articles" class="back-link">← Volver al Catálogo</a>
+    </div>
+    <h2 class="page-title">
+      {{ isEditMode() ? 'Editar Artículo o Producto' : 'Nuevo Artículo o Producto' }}
+    </h2>
+    <p class="page-subtitle">
+      Configura los datos del servicio, sus tarifas de venta y la participación de profesionales o entidades.
+    </p>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert-banner alert-error">{{ errorMessage() }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <span class="spinner">⏳</span>
+      <p>Cargando información del artículo...</p>
+    </div>
+  } @else {
+    <form (ngSubmit)="onSubmit()" class="article-form">
+      <!-- Sección 1: Información General -->
+      <div class="form-section glass-panel">
+        <h3 class="section-title">1. Información General</h3>
+
+        <div class="grid-2-col">
+          <div class="form-group">
+            <label for="articleCode" class="form-label">Código de Artículo *</label>
+            <input
+              id="articleCode"
+              type="text"
+              class="form-input"
+              placeholder="Ej: CONS-001 o RAD-RX-01"
+              [ngModel]="code()"
+              (ngModelChange)="code.set($event)"
+              name="code"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="articleName" class="form-label">Nombre del Artículo / Producto *</label>
+            <input
+              id="articleName"
+              type="text"
+              class="form-input"
+              placeholder="Ej: Consulta Especializada de Traumatología"
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+              name="name"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="grid-2-col mt-md">
+          <div class="form-group">
+            <label class="form-label">Categoría del Artículo *</label>
+            <app-category-combobox
+              [selectedCategoryId]="categoryId()"
+              (categorySelected)="onCategorySelected($event)"
+            ></app-category-combobox>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="form-label">Impuesto (IVA)</label>
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                class="form-checkbox"
+                [ngModel]="appliesVat()"
+                (ngModelChange)="appliesVat.set($event)"
+                name="appliesVat"
+              />
+              <span>Aplica IVA (16%) en Facturación</span>
+            </label>
+          </div>
+
+          @if (isEditMode()) {
+            <div class="form-group checkbox-group">
+              <label class="form-label">Estado</label>
+              <label class="toggle-label">
+                <input
+                  type="checkbox"
+                  class="form-checkbox"
+                  [ngModel]="isActive()"
+                  (ngModelChange)="isActive.set($event)"
+                  name="isActive"
+                />
+                <span>Artículo Activo para Facturación</span>
+              </label>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Sección 2: Esquema de Precios (Hasta 4 tipos) -->
+      <div class="form-section glass-panel">
+        <div class="section-header">
+          <h3 class="section-title">2. Esquema de Precios de Venta</h3>
+          <span class="section-hint">Hasta 4 tarifas posibles de venta</span>
+        </div>
+
+        <div class="prices-grid">
+          <div class="price-card required-price">
+            <div class="price-header">
+              <label for="price1" class="price-label">Precio 1 (Base) *</label>
+              <span class="badge-pill pill-required">Obligatorio</span>
+            </div>
+            <div class="currency-input-wrapper">
+              <span class="currency-symbol">$</span>
+              <input
+                id="price1"
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-input price-input"
+                placeholder="0.00"
+                [ngModel]="price1()"
+                (ngModelChange)="price1.set($event)"
+                name="price1"
+                required
+              />
+            </div>
+            <span class="price-desc">Tarifa general para pacientes</span>
+          </div>
+
+          <div class="price-card">
+            <div class="price-header">
+              <label for="price2" class="price-label">Precio 2</label>
+              <span class="badge-pill pill-optional">Opcional</span>
+            </div>
+            <div class="currency-input-wrapper">
+              <span class="currency-symbol">$</span>
+              <input
+                id="price2"
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-input price-input"
+                placeholder="0.00"
+                [ngModel]="price2()"
+                (ngModelChange)="price2.set($event)"
+                name="price2"
+              />
+            </div>
+            <span class="price-desc">Ej: Tarifa Aseguradoras Tipo A</span>
+          </div>
+
+          <div class="price-card">
+            <div class="price-header">
+              <label for="price3" class="price-label">Precio 3</label>
+              <span class="badge-pill pill-optional">Opcional</span>
+            </div>
+            <div class="currency-input-wrapper">
+              <span class="currency-symbol">$</span>
+              <input
+                id="price3"
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-input price-input"
+                placeholder="0.00"
+                [ngModel]="price3()"
+                (ngModelChange)="price3.set($event)"
+                name="price3"
+              />
+            </div>
+            <span class="price-desc">Ej: Tarifa Aseguradoras Tipo B</span>
+          </div>
+
+          <div class="price-card">
+            <div class="price-header">
+              <label for="price4" class="price-label">Precio 4</label>
+              <span class="badge-pill pill-optional">Opcional</span>
+            </div>
+            <div class="currency-input-wrapper">
+              <span class="currency-symbol">$</span>
+              <input
+                id="price4"
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-input price-input"
+                placeholder="0.00"
+                [ngModel]="price4()"
+                (ngModelChange)="price4.set($event)"
+                name="price4"
+              />
+            </div>
+            <span class="price-desc">Ej: Tarifa Convenio / Corporativo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección 3: Participantes y Honorarios -->
+      <div class="form-section glass-panel">
+        <h3 class="section-title">3. Distribución de Participantes</h3>
+        <app-participants-table [(rows)]="participantRows"></app-participants-table>
+      </div>
+
+      <!-- Barra de Acciones Final -->
+      <div class="form-actions">
+        <a routerLink="/articles" class="btn-secondary">Cancelar</a>
+
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="!isFormValid() || isSaving()"
+        >
+          @if (isSaving()) {
+            <span>Guardando...</span>
+          } @else {
+            <span>{{ isEditMode() ? 'Actualizar Artículo' : 'Guardar Artículo' }}</span>
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

@@ -1,0 +1,180 @@
+<app-header></app-header>
+
+<main class="page-container">
+  <div class="header-banner">
+    <div>
+      <h1 class="page-title">Gestión de Entidades Colaboradoras</h1>
+      <p class="page-subtitle">
+        Administra entidades colaboradoras.
+      </p>
+    </div>
+    <button type="button" class="btn-create" (click)="openCreateModal()">
+      + Nueva Entidad Colaboradora
+    </button>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-container">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'list'"
+      (click)="activeTab.set('list')"
+    >
+      📋 Todas las Entidades Colaboradoras ({{ entities().length }})
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'duplicates'"
+      (click)="activeTab.set('duplicates')"
+    >
+      🔍 Detección de Duplicados
+    </button>
+  </div>
+
+  <!-- Tab Content: List -->
+  @if (activeTab() === 'list') {
+    <div class="content-card">
+      <div class="toolbar">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Buscar por código o nombre del colaborador..."
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event); onSearchOrFilterChange()"
+          />
+        </div>
+
+        <div class="filter-box">
+          <select
+            class="status-select"
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="selectedStatus.set($event); onSearchOrFilterChange()"
+          >
+            <option value="all">Todos los estados</option>
+            <option value="ACTIVE">Sólo Activos</option>
+            <option value="INACTIVE">Sólo Inactivos</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Section -->
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>Cargando catálogo de entidades colaboradoras...</span>
+        </div>
+      } @else if (entities().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">👥</div>
+          <h4>No se encontraron entidades colaboradoras</h4>
+          <p>Intenta ajustar los términos de búsqueda o registra una nueva entidad.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th class="text-center">Artículos Vinc.</th>
+                <th class="text-center">Estado</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entity of entities(); track entity.id) {
+                <tr>
+                  <td class="cell-code">
+                    <span class="code-badge">{{ entity.code }}</span>
+                  </td>
+                  <td class="cell-name">
+                    <div class="name-wrapper">
+                      <span class="avatar-circle">{{ entity.name.substring(0, 2).toUpperCase() }}</span>
+                      <span class="name-text">{{ entity.name }}</span>
+                    </div>
+                  </td>
+                  <td class="cell-articles text-center">
+                    <span class="articles-count-pill" [class.has-articles]="entity.articlesCount > 0">
+                      {{ entity.articlesCount }} art.
+                    </span>
+                  </td>
+                  <td class="cell-status text-center">
+                    <span class="status-pill" [ngClass]="'status-' + entity.status.toLowerCase()">
+                      {{ entity.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="cell-actions text-right">
+                    <button type="button" class="action-btn edit-btn" (click)="openEditModal(entity)" title="Editar datos">
+                      ✏️ Editar
+                    </button>
+                    <button
+                      type="button"
+                      class="action-btn delete-btn"
+                      (click)="promptDelete(entity)"
+                      [disabled]="entity.articlesCount > 0"
+                      [title]="entity.articlesCount > 0 ? 'No se puede eliminar porque tiene artículos vinculados' : 'Eliminar entidad'"
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Tab Content: Duplicates -->
+    <div class="content-card p-4">
+      <app-entity-duplicates></app-entity-duplicates>
+    </div>
+  }
+</main>
+
+<!-- Modal de Formulario (Crear / Editar) -->
+<app-entity-form-modal
+  [isOpen]="isFormModalOpen()"
+  [entityToEdit]="selectedEntityForEdit()"
+  (saved)="onEntitySaved()"
+  (closeModal)="closeFormModal()"
+></app-entity-form-modal>
+
+<!-- Modal de Borrado Seguro -->
+@if (entityToDelete()) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header bg-danger">
+        <h3 class="text-danger">Confirmar Eliminación de Entidad</h3>
+        <button type="button" class="btn-close" (click)="cancelDelete()">✕</button>
+      </div>
+      <div class="modal-body p-4">
+        <p>
+          ¿Está seguro de que desea eliminar permanentemente a la entidad <strong>"{{ entityToDelete()?.name }}"</strong> (Código: <code>{{ entityToDelete()?.code }}</code>)?
+        </p>
+        <p class="text-muted small">
+          Esta acción no se puede deshacer. Se ha verificado que esta entidad posee <strong>0 artículos asociados</strong>.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-danger" (click)="confirmDelete()" [disabled]="isDeleting()">
+          @if (isDeleting()) {
+            Eliminando...
+          } @else {
+            Sí, Eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

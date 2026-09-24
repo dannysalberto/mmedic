@@ -1,0 +1,321 @@
+<div class="items-section glass-panel">
+  <div class="section-header">
+    <div>
+      <h3 class="section-title">2. Detalle de Artículos y Servicios a Facturar</h3>
+      <span class="section-hint">Seleccione artículo, tarifa de precio (1 al 4), cantidad y médico beneficiario</span>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary mr-sm" (click)="openArticleSearchModal()" title="Buscar y seleccionar múltiples artículos">
+        📋 Catálogo
+      </button>
+      <button type="button" class="btn-secondary" (click)="addRow()">
+        + Agregar Renglón
+      </button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Artículo / Producto *</th>
+          <th style="width: 14%;">Tipo de Precio *</th>
+          <th style="width: 10%;">Cantidad *</th>
+          <th style="width: 11%;">Precio Base</th>
+          <th style="width: 10%;">IVA (16%)</th>
+          <th style="width: 11%;">Subtotal Unit.</th>
+          <th style="width: 12%;">Total Renglón</th>
+          <th style="width: 18%;">Médico / Beneficiario *</th>
+          <th style="width: 5%;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.id; let idx = $index) {
+          <tr>
+            <!-- Buscador de Artículo por Código -->
+            <td class="article-cell">
+              @if (row.selectedArticle; as art) {
+                <!-- Artículo Seleccionado -->
+                <div class="selected-article-box">
+                  <span class="art-code-badge">{{ art.code }}</span>
+                  <span class="art-name-text" [title]="art.name">{{ art.name }}</span>
+                  <span class="art-vat-badge" [class.is-vat]="art.appliesVat">
+                    {{ art.appliesVat ? 'IVA' : 'Exento' }}
+                  </span>
+                  <button
+                    type="button"
+                    class="btn-clear-art"
+                    title="Cambiar artículo"
+                    (click)="clearArticleSelection(row)"
+                  >
+                    ✕
+                  </button>
+                </div>
+              } @else {
+                <!-- Input para ingresar Código del Artículo -->
+                <div class="art-search-wrapper">
+                  <input
+                    type="text"
+                    class="table-input art-search-input"
+                    [class.input-error]="row.notFound"
+                    placeholder="Código (ej: ART-7400)..."
+                    [ngModel]="row.searchQuery"
+                    (ngModelChange)="row.searchQuery = $event; row.notFound = false; row.searchResults = []"
+                    (keydown.enter)="searchArticle(row, $event)"
+                    (keydown.tab)="searchArticle(row, $event)"
+                    (blur)="onArticleInputBlur(row)"
+                  />
+                  <button
+                    type="button"
+                    class="btn-search-art"
+                    (click)="openArticleSearchModal(row)"
+                    title="Abrir catálogo para seleccionar artículo (o presione Enter para código)"
+                  >
+                    @if (row.isSearching) {
+                      ⏳
+                    } @else {
+                      🔍
+                    }
+                  </button>
+
+                  @if (row.notFound) {
+                    <div class="art-not-found-msg">⚠️ No encontrado</div>
+                  }
+
+                  @if (row.searchResults?.length) {
+                    <div class="art-suggestions-menu">
+                      <div class="suggestions-header">Coincidencias encontradas:</div>
+                      @for (candidate of row.searchResults; track candidate.id) {
+                        <button
+                          type="button"
+                          class="suggestion-item"
+                          (click)="selectArticleForRow(row, candidate)"
+                        >
+                          <span class="sugg-code">{{ candidate.code }}</span>
+                          <span class="sugg-name">{{ candidate.name }}</span>
+                          <span class="sugg-price">${{ candidate.price1 }}</span>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </td>
+
+            <!-- Selector de Tipo de Precio -->
+            <td>
+              <select
+                class="table-select"
+                [disabled]="!row.selectedArticle"
+                [ngModel]="row.priceType"
+                (ngModelChange)="onPriceTypeChange(row, $event)"
+              >
+                <option value="PRICE_1">P1: ${{ row.selectedArticle?.price1 || 0 }}</option>
+                @if (row.selectedArticle?.price2 !== null && row.selectedArticle?.price2 !== undefined) {
+                  <option value="PRICE_2">P2: ${{ row.selectedArticle?.price2 }}</option>
+                }
+                @if (row.selectedArticle?.price3 !== null && row.selectedArticle?.price3 !== undefined) {
+                  <option value="PRICE_3">P3: ${{ row.selectedArticle?.price3 }}</option>
+                }
+                @if (row.selectedArticle?.price4 !== null && row.selectedArticle?.price4 !== undefined) {
+                  <option value="PRICE_4">P4: ${{ row.selectedArticle?.price4 }}</option>
+                }
+              </select>
+            </td>
+
+            <!-- Cantidad -->
+            <td>
+              <input
+                type="number"
+                class="table-input number-input"
+                min="0.001"
+                step="1"
+                [ngModel]="row.quantity"
+                (ngModelChange)="onQuantityChange(row, $event)"
+              />
+            </td>
+
+            <!-- Precio Base sin IVA -->
+            <td class="text-right num-cell font-mono">
+              ${{ row.basePrice.toFixed(3) }}
+            </td>
+
+            <!-- Monto IVA unitario -->
+            <td class="text-right num-cell font-mono">
+              @if (row.vatAmount > 0) {
+                <span class="vat-tag">+${{ row.vatAmount.toFixed(3) }}</span>
+              } @else {
+                <span class="exempt-tag">$0.000</span>
+              }
+            </td>
+
+            <!-- Subtotal unitario (Base + IVA) -->
+            <td class="text-right num-cell font-mono font-medium">
+              ${{ row.subtotal.toFixed(3) }}
+            </td>
+
+            <!-- Total Renglón (Subtotal * Cantidad) -->
+            <td class="text-right num-cell font-mono font-bold text-accent">
+              ${{ row.total.toFixed(3) }}
+            </td>
+
+            <!-- Médico / Profesional Beneficiario -->
+            <td>
+              <select
+                class="table-select"
+                [ngModel]="row.contributorId"
+                (ngModelChange)="onContributorChange(row, $event)"
+              >
+                <option value="" disabled selected>-- Médico / Beneficiario --</option>
+                @for (contrib of availableContributors(); track contrib.id) {
+                  <option [value]="contrib.id">
+                    {{ contrib.code }} - {{ contrib.name }} {{ contrib.entity ? '(' + contrib.entity.name + ')' : '' }}
+                  </option>
+                }
+              </select>
+            </td>
+
+            <!-- Acción de Eliminar -->
+            <td class="text-center">
+              <button
+                type="button"
+                class="btn-row-delete"
+                title="Eliminar renglón"
+                (click)="removeRow(idx)"
+              >
+                🗑️
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Resumen y Totales de la Factura -->
+  <div class="totals-summary-container">
+    <div class="totals-card">
+      <div class="total-row">
+        <span>Base Imponible Gravable / Exenta:</span>
+        <span class="total-val">${{ totals().subtotal.toFixed(3) }}</span>
+      </div>
+      <div class="total-row">
+        <span>Total IVA (16%):</span>
+        <span class="total-val text-vat">${{ totals().vatAmount.toFixed(3) }}</span>
+      </div>
+      <div class="total-row grand-total-row">
+        <span>TOTAL A FACTURAR:</span>
+        <span class="grand-total-val">${{ totals().total.toFixed(3) }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Seleccion Múltiple de Artículos -->
+@if (showArticleModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-dialog modal-lg glass-panel">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Catálogo de Artículos y Servicios</h3>
+          <span class="section-hint">Seleccione uno o varios artículos para incorporarlos a la factura</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeArticleSearchModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="search-bar-row mb-md">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              class="form-input search-input"
+              placeholder="Buscar por código o nombre de artículo..."
+              [ngModel]="articleSearchFilter()"
+              (ngModelChange)="articleSearchFilter.set($event); filterArticlesForPicker($event)"
+            />
+          </div>
+        </div>
+
+        <div class="table-responsive picker-table-container">
+          <table class="picker-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;" class="text-center">
+                  <input
+                    type="checkbox"
+                    [checked]="areAllArticlesSelectedModal()"
+                    (change)="toggleSelectAllArticlesModal($event)"
+                  />
+                </th>
+                <th>Código</th>
+                <th>Artículo / Descripción</th>
+                <th>P1 ($)</th>
+                <th>P2 ($)</th>
+                <th>P3 ($)</th>
+                <th>P4 ($)</th>
+                <th>IVA</th>
+                <th class="text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (art of articleListForPicker(); track art.id) {
+                <tr [class.row-selected]="isArticleSelectedInModal(art.id)" (click)="toggleArticleSelectionModal(art.id)">
+                  <td class="text-center" (click)="$event.stopPropagation()">
+                    <input
+                      type="checkbox"
+                      [checked]="isArticleSelectedInModal(art.id)"
+                      (change)="toggleArticleSelectionModal(art.id)"
+                    />
+                  </td>
+                  <td><span class="art-code-badge">{{ art.code }}</span></td>
+                  <td class="font-medium text-primary">{{ art.name }}</td>
+                  <td class="font-mono text-accent">${{ art.price1 }}</td>
+                  <td class="font-mono text-price">${{ art.price2 !== null && art.price2 !== undefined ? art.price2 : '-' }}</td>
+                  <td class="font-mono text-price">${{ art.price3 !== null && art.price3 !== undefined ? art.price3 : '-' }}</td>
+                  <td class="font-mono text-price">${{ art.price4 !== null && art.price4 !== undefined ? art.price4 : '-' }}</td>
+                  <td>
+                    <span class="art-vat-badge" [class.is-vat]="art.appliesVat">
+                      {{ art.appliesVat ? '16%' : 'Exento' }}
+                    </span>
+                  </td>
+                  <td class="text-center" (click)="$event.stopPropagation()">
+                    <button
+                      type="button"
+                      class="btn-select-item"
+                      [class.btn-selected]="isArticleSelectedInModal(art.id)"
+                      (click)="toggleArticleSelectionModal(art.id)"
+                    >
+                      {{ isArticleSelectedInModal(art.id) ? '✓ Seleccionado' : '+ Seleccionar' }}
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="9" class="text-center py-lg text-muted">
+                    No se encontraron artículos con el término buscado.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span class="selected-count-badge">
+          {{ selectedArticleIdsModal().size }} artículo(s) seleccionado(s)
+        </span>
+        <button type="button" class="btn-cancel" (click)="closeArticleSearchModal()">Cancelar</button>
+        <button
+          type="button"
+          class="btn-primary"
+          [disabled]="selectedArticleIdsModal().size === 0"
+          (click)="confirmArticleModalSelection()"
+        >
+          Agregar Seleccionados ({{ selectedArticleIdsModal().size }})
+        </button>
+      </div>
+    </div>
+  </div>
+}

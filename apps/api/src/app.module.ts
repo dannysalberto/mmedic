@@ -8,6 +8,12 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 
 import { UsersModule } from './modules/users/users.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { EntitiesModule } from './modules/entities/entities.module';
+import { ContributorsModule } from './modules/contributors/contributors.module';
+import { ArticlesModule } from './modules/articles/articles.module';
+import { CustomersModule } from './modules/customers/customers.module';
+import { InvoicesModule } from './modules/invoices/invoices.module';
 
 @Module({
   imports: [
@@ -19,6 +25,12 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
     AuthModule,
     UsersModule,
     PermissionsModule,
+    CategoriesModule,
+    EntitiesModule,
+    ContributorsModule,
+    ArticlesModule,
+    CustomersModule,
+    InvoicesModule,
     HealthModule,
     PatientsModule,
     AppointmentsModule,

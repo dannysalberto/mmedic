@@ -1,0 +1,139 @@
+<app-header></app-header>
+
+<main class="page-container">
+  <div class="header-banner">
+    <div>
+      <h1 class="page-title">Directorio de Pacientes / Clientes</h1>
+      <p class="page-subtitle">
+        Administra la base de datos centralizada de pacientes y clientes receptores de facturas y consultas.
+      </p>
+    </div>
+    <button type="button" class="btn-create" (click)="openCreateModal()">
+      + Nuevo Cliente / Paciente
+    </button>
+  </div>
+
+  <div class="content-card">
+    <div class="toolbar">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Buscar por Cédula/RIF, nombre o teléfono del cliente..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event); onSearchChange()"
+        />
+      </div>
+    </div>
+
+    <!-- Table Section -->
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Cargando catálogo de pacientes y clientes...</span>
+      </div>
+    } @else if (customers().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">👤</div>
+        <h4>No se encontraron clientes o pacientes</h4>
+        <p>Intenta ajustar los términos de búsqueda o registra un nuevo paciente/cliente.</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cédula / RIF</th>
+              <th>Nombre / Razón Social</th>
+              <th>Teléfono</th>
+              <th>Correo Electrónico</th>
+              <th>Dirección</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (customer of customers(); track customer.id) {
+              <tr>
+                <td class="cell-code">
+                  <span class="code-badge">{{ customer.taxId }}</span>
+                </td>
+                <td class="cell-name">
+                  <div class="name-wrapper">
+                    <span class="avatar-circle">{{ customer.name.substring(0, 2).toUpperCase() }}</span>
+                    <span class="name-text">{{ customer.name }}</span>
+                  </div>
+                </td>
+                <td class="cell-text">
+                  {{ customer.phone || 'N/A' }}
+                </td>
+                <td class="cell-text">
+                  {{ customer.email || 'N/A' }}
+                </td>
+                <td class="cell-text">
+                  {{ customer.address || 'N/A' }}
+                </td>
+                <td class="cell-actions text-right">
+                  <button type="button" class="action-btn edit-btn" (click)="openEditModal(customer)" title="Editar datos">
+                    ✏️ Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn delete-btn"
+                    (click)="promptDelete(customer)"
+                    title="Eliminar cliente"
+                  >
+                    🗑️ Eliminar
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</main>
+
+<!-- Modal de Formulario (Crear / Editar) -->
+<app-customer-form-modal
+  [isOpen]="isFormModalOpen()"
+  [customerToEdit]="selectedCustomerForEdit()"
+  (saved)="onCustomerSaved()"
+  (closeModal)="closeFormModal()"
+></app-customer-form-modal>
+
+<!-- Modal de Borrado Seguro -->
+@if (customerToDelete()) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header bg-danger">
+        <h3 class="text-danger">Confirmar Eliminación de Cliente</h3>
+        <button type="button" class="btn-close" (click)="cancelDelete()">✕</button>
+      </div>
+      <div class="modal-body p-4">
+        <p>
+          ¿Está seguro de que desea eliminar permanentemente al cliente <strong>"{{ customerToDelete()?.name }}"</strong> (Cédula/RIF: <code>{{ customerToDelete()?.taxId }}</code>)?
+        </p>
+        <p class="text-muted small">
+          Esta acción verificará que el cliente no posea facturas o movimientos vinculados. En caso de tenerlos, la eliminación será bloqueada.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-danger" (click)="confirmDelete()" [disabled]="isDeleting()">
+          @if (isDeleting()) {
+            Eliminando...
+          } @else {
+            Sí, Eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

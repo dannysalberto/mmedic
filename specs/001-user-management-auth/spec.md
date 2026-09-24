@@ -14,19 +14,20 @@
 
 ### User Story 1 - Autenticación de Acceso y Portal de Inicio (Priority: P1)
 
-Como usuario del sistema MMedic (o superadministrador inicial), quiero acceder al portal de inicio de sesión seguro para autenticarme con mis credenciales y acceder a las funciones operativas de la plataforma según mi rol y organización.
+Como usuario del sistema MMedic (o superadministrador inicial), quiero acceder al portal de inicio de sesión seguro (tanto desde la plataforma Web como desde la aplicación móvil Android) para autenticarme con mis credenciales y acceder a las funciones operativas de la plataforma según mi rol y organización.
 
-**Why this priority**: Es la puerta de entrada indispensable y el mecanismo de seguridad primario de la plataforma; sin autenticación no es posible operar ni identificar al usuario.
+**Why this priority**: Es la puerta de entrada indispensable y el mecanismo de seguridad primario de la plataforma; sin autenticación no es posible operar ni identificar al usuario. Cumple con la directiva constitucional de Paridad Web-Android (Principio 1.3).
 
-**Independent Test**: Puede validarse completamente intentando iniciar sesión con el usuario predeterminado `superadmin` y su clave `superadmin@123#`, verificando la visualización del layout dividido (80% branding / 20% formulario en escritorio) y la cabecera con navegación institucional.
+**Independent Test**: Puede validarse completamente intentando iniciar sesión con el usuario predeterminado `superadmin` y su clave `superadmin@123#`, verificando tanto la interfaz web (layout dividido 80% branding / 20% formulario en escritorio) como la interfaz nativa Android en Jetpack Compose con almacenamiento seguro del token JWT.
 
 **Acceptance Scenarios**:
 
-1. **Given** un usuario no autenticado que ingresa al sistema, **When** carga la página principal, **Then** visualiza una cabecera horizontal con el logotipo del sistema alineado a la izquierda y un menú a la derecha con los enlaces "Acerca de", "Contáctanos" y "Quiénes somos".
-2. **Given** un usuario en pantalla de escritorio (PC), **When** visualiza la zona de autenticación, **Then** observa un diseño dividido en dos columnas: el 80% izquierdo ocupado por el logotipo distintivo/branding del sistema y el 20% derecho por el formulario de inicio de sesión.
-3. **Given** un usuario en dispositivo móvil o pantalla chica (< 640px), **When** accede a la pantalla de login, **Then** la interfaz se adapta verticalmente mostrando el formulario de forma prominente sin desbordamiento horizontal y con controles táctiles accesibles.
-4. **Given** las credenciales iniciales de instalación (`superadmin` y `superadmin@123#`), **When** se envían en el formulario, **Then** el sistema valida la identidad, inicia la sesión de forma segura y redirige al panel de administración general.
-5. **Given** credenciales erróneas o usuario inexistente, **When** se intenta iniciar sesión, **Then** el sistema muestra un mensaje de error claro de credenciales inválidas sin revelar qué dato específico falló.
+1. **Given** un usuario no autenticado que ingresa al sistema web, **When** carga la página principal, **Then** visualiza una cabecera horizontal con el logotipo del sistema alineado a la izquierda y un menú a la derecha con los enlaces "Acerca de", "Contáctanos" y "Quiénes somos".
+2. **Given** un usuario en pantalla de escritorio web (PC), **When** visualiza la zona de autenticación, **Then** observa un diseño dividido en dos columnas: el 80% izquierdo ocupado por el logotipo distintivo/branding del sistema y el 20% derecho por el formulario de inicio de sesión.
+3. **Given** un usuario en dispositivo móvil o pantalla chica web (< 640px), **When** accede a la pantalla de login, **Then** la interfaz se adapta verticalmente mostrando el formulario de forma prominente sin desbordamiento horizontal y con controles táctiles accesibles.
+4. **Given** un usuario abriendo la aplicación móvil Android (`apps/android`), **When** accede a la pantalla de inicio de sesión nativa en Jetpack Compose, **Then** visualiza el branding institucional de MMedic, los campos de usuario y contraseña con retroalimentación visual accesible, y el botón de autenticación estilizado con los tokens de diseño de la marca.
+5. **Given** las credenciales iniciales de instalación (`superadmin` y `superadmin@123#`), **When** se envían en el formulario web o móvil Android, **Then** el sistema valida la identidad, emite el token JWT, persiste la sesión de forma segura y redirige a la vista principal.
+6. **Given** credenciales erróneas o usuario inexistente, **When** se intenta iniciar sesión desde Web o Android, **Then** el sistema muestra un mensaje de error claro de credenciales inválidas sin revelar qué dato específico falló.
 
 ---
 
@@ -75,7 +76,8 @@ Como operador del sistema o componente de interfaz, quiero consultar si un usuar
 
 1. **Given** una consulta que recibe un identificador de usuario y un código de permiso, **When** el usuario posee dicho permiso asignado (o inherente por su rol), **Then** la consulta retorna `verdadero` (`true`).
 2. **Given** una consulta que recibe un identificador de usuario y un código de permiso que el usuario no tiene concedido, **When** se evalúa la combinación, **Then** la consulta retorna `falso` (`false`).
-3. **Given** una pantalla con un botón de acción crítica (ej. "Anular Factura"), **When** la verificación `usuario + permiso` resulta afirmativa, **Then** el botón se muestra habilitado para su interacción; en caso contrario, se muestra inactivo o no disponible.
+3. **Given** una pantalla web con un botón de acción crítica (ej. "Anular Factura"), **When** la verificación `usuario + permiso` resulta afirmativa, **Then** el botón se muestra habilitado para su interacción; en caso contrario, se muestra inactivo o no disponible.
+4. **Given** una vista o pantalla en la aplicación Android (`apps/android`), **When** se evalúa reactivamente el StateFlow de permisos del usuario autenticado, **Then** los botones y acciones restringidas se habilitan, deshabilitan u ocultan con paridad visual respecto a la plataforma web.
 
 ---
 
@@ -111,6 +113,8 @@ Como operador del sistema o componente de interfaz, quiero consultar si un usuar
 - **FR-012**: Todas las operaciones y datos de usuarios DEBEN estar aisladas por inquilino (`tenantId`) por defecto, restringiendo la visibilidad inter-clínicas, salvo para la gestión global del `ROL_SUPERADMIN`.
 - **FR-013**: Todo error ocurrido en las operaciones de administración de usuarios y autenticación DEBE registrar una traza detallada en la base de datos con archivo de origen, línea, mensaje, descripción, usuario, fecha y tipo de excepción.
 - **FR-014**: Toda mutación en las estructuras de base de datos (nuevas tablas, columnas o datos semilla) DEBE ejecutarse mediante migraciones versionadas y reproducibles.
+- **FR-015 (Paridad Móvil Android)**: El sistema DEBE proveer en `apps/android` una pantalla de inicio de sesión nativa en Jetpack Compose que consuma el endpoint de login de la API y almacene el token JWT de forma segura.
+- **FR-016 (Manejo de Permisos en Android)**: La app Android DEBE evaluar reactivamente los permisos del usuario (`hasPermission`) para habilitar o deshabilitar acciones sensibles en la interfaz móvil con paridad respecto a la Web.
 
 ---
 

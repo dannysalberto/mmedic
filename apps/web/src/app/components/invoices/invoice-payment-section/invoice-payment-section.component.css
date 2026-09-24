@@ -1,0 +1,248 @@
+.payments-section {
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+.section-hint {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.balance-summary-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #e2e8f0;
+}
+
+.clickable-badge {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.clickable-badge:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.6);
+  transform: translateY(-1px);
+}
+
+.badge-action-hint {
+  font-size: 0.75rem;
+  background: rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 0.35rem;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.balance-amount {
+  font-family: ui-monospace, monospace;
+  font-size: 1.2rem;
+  color: #34d399;
+}
+
+.payment-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  align-items: end;
+  background: rgba(30, 41, 59, 0.5);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.form-select,
+.form-input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #ffffff;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.form-select:focus,
+.form-input:focus {
+  border-color: #3b82f6;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  height: 42px;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.change-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 10px;
+  padding: 0.85rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.change-icon {
+  font-size: 1.8rem;
+}
+
+.change-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+  color: #fbbf24;
+}
+
+.change-val {
+  font-family: ui-monospace, monospace;
+  font-size: 1.35rem;
+  color: #ffffff;
+}
+
+.sub-title {
+  font-size: 1rem;
+  color: #e2e8f0;
+  margin: 0 0 0.75rem 0;
+}
+
+.no-payments-msg {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+}
+
+.payments-table-container {
+  overflow-x: auto;
+}
+
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.payments-table th {
+  background: rgba(30, 41, 59, 0.8);
+  color: #cbd5e1;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.payments-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.method-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.font-mono {
+  font-family: ui-monospace, monospace;
+}
+
+.text-accent {
+  color: #38bdf8;
+}
+
+.change-tag {
+  color: #34d399;
+}
+
+.btn-delete-payment {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.btn-delete-payment:hover {
+  opacity: 1;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+.warning-text {
+  color: #f59e0b;
+  font-size: 0.85rem;
+}
+
+.text-danger {
+  color: #f87171;
+}
+
+.mt-md {
+  margin-top: 1.25rem;
+}

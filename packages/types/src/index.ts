@@ -147,3 +147,272 @@ export interface HealthStatus {
   database: 'connected' | 'disconnected';
   timestamp: string;
 }
+
+// ==========================================
+// ARTICLES, CATEGORIES & ENTITIES CONTRACTS
+// ==========================================
+
+export type EntityStatus = 'ACTIVE' | 'INACTIVE';
+
+export interface ArticleCategory {
+  id: string;
+  tenantId?: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCategoryDto {
+  name: string;
+}
+
+export interface UpdateCategoryDto {
+  name?: string;
+}
+
+export interface CategoryWithStats extends ArticleCategory {
+  articlesCount: number;
+}
+
+export interface DuplicateCategoryGroup {
+  normalizedName: string;
+  categories: CategoryWithStats[];
+  matchScore: number;
+}
+
+export interface MergeCategoriesDto {
+  primaryCategoryId: string;
+  secondaryCategoryId: string;
+}
+
+export interface Entity {
+  id: string;
+  tenantId?: string;
+  code: string;
+  name: string;
+  status: EntityStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEntityDto {
+  code: string;
+  name: string;
+  status?: EntityStatus;
+}
+
+export interface UpdateEntityDto {
+  code?: string;
+  name?: string;
+  status?: EntityStatus;
+}
+
+export interface EntityWithStats extends Entity {
+  articlesCount: number;
+}
+
+export interface DuplicateEntityGroup {
+  normalizedName: string;
+  entities: EntityWithStats[];
+  matchScore: number;
+}
+
+export interface MergeEntitiesDto {
+  primaryEntityId: string;
+  secondaryEntityId: string;
+}
+
+
+export interface ArticleParticipantItemDto {
+  entityId: string;
+  percentage: number;
+}
+
+export interface ArticleParticipant {
+  id: string;
+  tenantId?: string;
+  articleId: string;
+  entityId: string;
+  percentage: number;
+  entity?: Entity;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Article {
+  id: string;
+  tenantId?: string;
+  code: string;
+  name: string;
+  categoryId: string;
+  category?: ArticleCategory;
+  price1: number;
+  price2?: number | null;
+  price3?: number | null;
+  price4?: number | null;
+  isActive: boolean;
+  appliesVat?: boolean;
+  participants?: ArticleParticipant[];
+  participantsCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateArticleDto {
+  code: string;
+  name: string;
+  categoryId: string;
+  price1: number;
+  price2?: number | null;
+  price3?: number | null;
+  price4?: number | null;
+  appliesVat?: boolean;
+  participants?: ArticleParticipantItemDto[];
+}
+
+export interface UpdateArticleDto extends Partial<CreateArticleDto> {
+  isActive?: boolean;
+}
+
+// ==========================================
+// BILLING, INVOICES & PAYMENTS CONTRACTS
+// ==========================================
+
+export type InvoiceType = 'CASH' | 'CREDIT';
+export type InvoiceStatus = 'PENDING' | 'PAID' | 'VOIDED';
+export type PaymentMethod = 'CASH' | 'CARD' | 'CASHEA' | 'BINANCE' | 'TRANSFER' | 'OTHER';
+export type PriceType = 'PRICE_1' | 'PRICE_2' | 'PRICE_3' | 'PRICE_4';
+
+export interface Customer {
+  id: string;
+  tenantId?: string;
+  taxId: string;       // RIF / Cédula
+  name: string;        // Nombre o Razón Social
+  phone: string;
+  address: string;
+  email?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCustomerDto {
+  taxId: string;
+  name: string;
+  phone: string;
+  address: string;
+  email?: string;
+}
+
+export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {}
+
+export interface InvoiceItemParticipantNode {
+  entityId: string;
+  percentage: number;
+}
+
+export interface InvoiceItem {
+  id: string;
+  tenantId?: string;
+  invoiceId: string;
+  articleId: string;
+  contributorId?: string | null; // Médico / Personal que ejecuta el servicio
+  entityId?: string | null;      // Entidad asociada
+  priceType: PriceType;
+  quantity: number;
+  basePrice: number;     // Precio unitario sin IVA
+  vatAmount: number;     // Monto IVA unitario
+  subtotal: number;      // Base + IVA
+  total: number;         // Subtotal * Cantidad (a 3 decimales)
+  participantsJson?: InvoiceItemParticipantNode[] | null;
+  article?: {
+    code: string;
+    name: string;
+    appliesVat: boolean;
+  };
+  contributor?: {
+    code: string;
+    name: string;
+  };
+  entity?: {
+    code: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInvoiceItemDto {
+  articleId: string;
+  contributorId?: string;
+  entityId?: string;
+  priceType: PriceType;
+  quantity: number;
+}
+
+export interface InvoicePayment {
+  id: string;
+  tenantId?: string;
+  invoiceId: string;
+  paymentMethod: PaymentMethod;
+  amount: number;                 // Imputado a la factura
+  receivedAmount?: number | null; // Entregado por el cliente
+  changeAmount?: number | null;   // Vuelto
+  reference?: string | null;
+  paymentDate: string;
+  receivedById?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInvoicePaymentDto {
+  paymentMethod: PaymentMethod;
+  amount: number;
+  receivedAmount?: number;
+  changeAmount?: number;
+  reference?: string;
+}
+
+export interface Invoice {
+  id: string;
+  tenantId?: string;
+  invoiceNumber: string;
+  issueDate: string;
+  customerId: string;
+  type: InvoiceType;
+  status: InvoiceStatus;
+  subtotal: number;
+  vatAmount: number;
+  total: number;
+  notes?: string | null;
+  createdById?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InvoiceWithDetails extends Invoice {
+  customer: Customer;
+  items: InvoiceItem[];
+  payments: InvoicePayment[];
+  totalPaid: number;
+  balanceDue: number;
+}
+
+export interface CreateInvoiceDto {
+  customerId?: string;                 // ID si el cliente ya existe
+  newCustomer?: CreateCustomerDto;     // Creación inline si es nuevo
+  type: InvoiceType;
+  notes?: string;
+  items: CreateInvoiceItemDto[];
+  payments?: CreateInvoicePaymentDto[];
+}
+
+export interface VoidInvoiceDto {
+  reason: string;
+}
+
+export * from './contributor';
+export * from './customer';
+
+
+
+
