@@ -58,7 +58,7 @@
   } @else {
     <!-- Invoices Table -->
     <div class="table-container glass-panel">
-      <table class="data-table">
+      <table class="data-table invoices-table">
         <thead>
           <tr>
             <th>N° Factura</th>
@@ -146,6 +146,91 @@
           }
         </tbody>
       </table>
+
+      <!-- Cards View (< 1024px) -->
+      <div class="invoices-mobile-list">
+        @for (inv of invoices(); track inv.id) {
+          <div class="invoice-card" [class.voided-row]="inv.status === 'VOIDED'">
+            <div class="card-header-inv">
+              <div>
+                <span class="inv-number">{{ inv.invoiceNumber }}</span>
+                <div class="inv-date">{{ inv.issueDate | date:'dd/MM/yyyy HH:mm' }}</div>
+              </div>
+              <div>
+                @if (inv.status === 'PENDING') {
+                  <span class="status-badge status-pending">PENDIENTE</span>
+                } @else if (inv.status === 'PAID') {
+                  <span class="status-badge status-paid">PAGADA</span>
+                } @else if (inv.status === 'VOIDED') {
+                  <span class="status-badge status-voided">ANULADA</span>
+                }
+              </div>
+            </div>
+
+            <div class="card-meta">
+              <div>
+                <strong>Cliente:</strong>
+                <span>{{ inv.customer.name || 'Cliente Ocasional' }} ({{ inv.customer.taxId || 'S/N' }})</span>
+              </div>
+              <div>
+                <strong>Tipo:</strong>
+                <span class="badge-type" [class.badge-credit]="inv.type === 'CREDIT'">
+                  {{ inv.type === 'CASH' ? 'Contado' : 'Crédito' }}
+                </span>
+              </div>
+              <div class="inv-totals-row">
+                <div>
+                  <strong>Total:</strong>
+                  <span class="font-bold text-primary">${{ inv.total | number:'1.3-3' }}</span>
+                </div>
+                <div>
+                  <strong>Saldo:</strong>
+                  @if (inv.status === 'PAID') {
+                    <span class="text-success font-bold">$0.000</span>
+                  } @else if (inv.status === 'VOIDED') {
+                    <span class="text-muted font-bold">-</span>
+                  } @else {
+                    <span class="font-bold text-danger">${{ (inv.balanceDue || (inv.total - (inv.totalPaid || 0))) | number:'1.3-3' }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button
+                type="button"
+                class="btn-action btn-view"
+                title="Ver Comprobante"
+                (click)="openPreview(inv.id)"
+              >
+                👁️ Ver
+              </button>
+
+              @if (inv.status === 'PENDING') {
+                <button
+                  type="button"
+                  class="btn-action btn-pay"
+                  title="Cobrar / Registrar Pagos"
+                  (click)="openPaymentModal(inv.id)"
+                >
+                  💳 Cobrar
+                </button>
+              }
+
+              @if (inv.status !== 'VOIDED' && isAdmin()) {
+                <button
+                  type="button"
+                  class="btn-action btn-void"
+                  title="Anular Factura"
+                  (click)="promptVoid(inv)"
+                >
+                  🚫 Anular
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
     </div>
   }
 

@@ -139,6 +139,67 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Cards View (< 1024px) -->
+        <div class="contributors-mobile-list">
+          @for (contributor of contributors(); track contributor.id) {
+            <div class="contributor-card" [class.card-inactive]="contributor.status !== 'ACTIVE'">
+              <div class="card-header-contributor">
+                <div class="contributor-cell">
+                  <span class="avatar-circle avatar-large">{{ contributor.name.substring(0, 2).toUpperCase() }}</span>
+                  <div>
+                    <div class="contributor-fullname">{{ contributor.name }}</div>
+                    <div class="contributor-code">
+                      <span class="code-badge">{{ contributor.code }}</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="status-pill" [ngClass]="'status-' + contributor.status.toLowerCase()">
+                  {{ contributor.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+
+              <div class="card-meta">
+                <div>
+                  <strong>Entidad:</strong>
+                  @if (contributor.entity) {
+                    <span class="code-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
+                      {{ contributor.entity.code }} - {{ contributor.entity.name }}
+                    </span>
+                  } @else {
+                    <span class="text-muted small">Sin asignar</span>
+                  }
+                </div>
+                <div>
+                  <strong>Participaciones:</strong>
+                  <span class="articles-count-pill" [class.has-articles]="contributor.articlesCount > 0">
+                    {{ contributor.articlesCount }} serv.
+                  </span>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  type="button"
+                  class="action-btn edit-btn"
+                  (click)="openEditModal(contributor)"
+                  title="Editar datos"
+                >
+                  ✏️ Editar
+                </button>
+                <button
+                  type="button"
+                  class="action-btn delete-btn"
+                  (click)="promptDelete(contributor)"
+                  [disabled]="contributor.articlesCount > 0"
+                  [title]="contributor.articlesCount > 0 ? 'No se puede eliminar porque tiene registros vinculados' : 'Eliminar colaborador'"
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       }
     </div>
   } @else {

@@ -129,6 +129,57 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Cards View (< 1024px) -->
+        <div class="entities-mobile-list">
+          @for (entity of entities(); track entity.id) {
+            <div class="entity-card" [class.card-inactive]="entity.status !== 'ACTIVE'">
+              <div class="card-header-entity">
+                <div class="entity-cell">
+                  <span class="avatar-circle avatar-large">{{ entity.name.substring(0, 2).toUpperCase() }}</span>
+                  <div>
+                    <div class="entity-fullname">{{ entity.name }}</div>
+                    <div class="entity-code">
+                      <span class="code-badge">{{ entity.code }}</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="status-pill" [ngClass]="'status-' + entity.status.toLowerCase()">
+                  {{ entity.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+
+              <div class="card-meta">
+                <div>
+                  <strong>Artículos Vinc.:</strong>
+                  <span class="articles-count-pill" [class.has-articles]="entity.articlesCount > 0">
+                    {{ entity.articlesCount }} art.
+                  </span>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  type="button"
+                  class="action-btn edit-btn"
+                  (click)="openEditModal(entity)"
+                  title="Editar datos"
+                >
+                  ✏️ Editar
+                </button>
+                <button
+                  type="button"
+                  class="action-btn delete-btn"
+                  (click)="promptDelete(entity)"
+                  [disabled]="entity.articlesCount > 0"
+                  [title]="entity.articlesCount > 0 ? 'No se puede eliminar porque tiene artículos vinculados' : 'Eliminar entidad'"
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       }
     </div>
   } @else {

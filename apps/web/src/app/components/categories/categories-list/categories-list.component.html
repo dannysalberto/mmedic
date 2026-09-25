@@ -119,6 +119,56 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Cards View (< 1024px) -->
+        <div class="categories-mobile-list">
+          @for (category of categories(); track category.id) {
+            <div class="category-card">
+              <div class="card-header-category">
+                <div class="category-cell">
+                  <span class="avatar-circle avatar-large">{{ category.name.substring(0, 2).toUpperCase() }}</span>
+                  <div>
+                    <div class="category-fullname">{{ category.name }}</div>
+                    <div class="category-date text-muted small">
+                      Creada: {{ category.createdAt | date: 'dd/MM/yyyy' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-meta">
+                <div>
+                  <strong>Artículos Vinc.:</strong>
+                  <span class="articles-count-pill" [class.has-articles]="category.articlesCount > 0">
+                    {{ category.articlesCount }} art.
+                  </span>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  type="button"
+                  class="action-btn edit-btn"
+                  [id]="'btn-edit-' + category.id"
+                  (click)="openEditModal(category)"
+                  title="Editar nombre de categoría"
+                >
+                  ✏️ Editar
+                </button>
+                <button
+                  type="button"
+                  class="action-btn delete-btn"
+                  [id]="'btn-delete-' + category.id"
+                  (click)="promptDelete(category)"
+                  [disabled]="category.articlesCount > 0"
+                  [title]="category.articlesCount > 0 ? 'No se puede eliminar: tiene artículos vinculados' : 'Eliminar categoría'"
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       }
     </div>
   } @else {

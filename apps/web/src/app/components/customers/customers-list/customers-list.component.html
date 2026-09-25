@@ -43,60 +43,104 @@
         <p>Intenta ajustar los términos de búsqueda o registra un nuevo paciente/cliente.</p>
       </div>
     } @else {
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Cédula / RIF</th>
-              <th>Nombre / Razón Social</th>
-              <th>Teléfono</th>
-              <th>Correo Electrónico</th>
-              <th>Dirección</th>
-              <th class="text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (customer of customers(); track customer.id) {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td class="cell-code">
-                  <span class="code-badge">{{ customer.taxId }}</span>
-                </td>
-                <td class="cell-name">
-                  <div class="name-wrapper">
-                    <span class="avatar-circle">{{ customer.name.substring(0, 2).toUpperCase() }}</span>
-                    <span class="name-text">{{ customer.name }}</span>
-                  </div>
-                </td>
-                <td class="cell-text">
-                  {{ customer.phone || 'N/A' }}
-                </td>
-                <td class="cell-text">
-                  {{ customer.email || 'N/A' }}
-                </td>
-                <td class="cell-text">
-                  {{ customer.address || 'N/A' }}
-                </td>
-                <td class="cell-actions text-right">
-                  <button type="button" class="action-btn edit-btn" (click)="openEditModal(customer)" title="Editar datos">
-                    ✏️ Editar
-                  </button>
-                  <button
-                    type="button"
-                    class="action-btn delete-btn"
-                    (click)="promptDelete(customer)"
-                    title="Eliminar cliente"
-                  >
-                    🗑️ Eliminar
-                  </button>
-                </td>
+                <th>Cédula / RIF</th>
+                <th>Nombre / Razón Social</th>
+                <th>Teléfono</th>
+                <th>Correo Electrónico</th>
+                <th>Dirección</th>
+                <th class="text-right">Acciones</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-  </div>
-</main>
+            </thead>
+            <tbody>
+              @for (customer of customers(); track customer.id) {
+                <tr>
+                  <td class="cell-code">
+                    <span class="code-badge">{{ customer.taxId }}</span>
+                  </td>
+                  <td class="cell-name">
+                    <div class="name-wrapper">
+                      <span class="avatar-circle">{{ customer.name.substring(0, 2).toUpperCase() }}</span>
+                      <span class="name-text">{{ customer.name }}</span>
+                    </div>
+                  </td>
+                  <td class="cell-text">
+                    {{ customer.phone || 'N/A' }}
+                  </td>
+                  <td class="cell-text">
+                    {{ customer.email || 'N/A' }}
+                  </td>
+                  <td class="cell-text">
+                    {{ customer.address || 'N/A' }}
+                  </td>
+                  <td class="cell-actions text-right">
+                    <button type="button" class="action-btn edit-btn" (click)="openEditModal(customer)" title="Editar datos">
+                      ✏️ Editar
+                    </button>
+                    <button
+                      type="button"
+                      class="action-btn delete-btn"
+                      (click)="promptDelete(customer)"
+                      title="Eliminar cliente"
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Cards View (< 1024px) -->
+        <div class="customers-mobile-list">
+          @for (customer of customers(); track customer.id) {
+            <div class="customer-card">
+              <div class="card-header-customer">
+                <div class="customer-cell">
+                  <span class="avatar-circle avatar-large">{{ customer.name.substring(0, 2).toUpperCase() }}</span>
+                  <div>
+                    <div class="customer-fullname">{{ customer.name }}</div>
+                    <div class="customer-taxid">
+                      <span class="code-badge">{{ customer.taxId }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-meta">
+                <div><strong>Teléfono:</strong> {{ customer.phone || 'No registrado' }}</div>
+                <div><strong>Email:</strong> {{ customer.email || 'No registrado' }}</div>
+                <div><strong>Dirección:</strong> {{ customer.address || 'No registrada' }}</div>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  type="button"
+                  class="action-btn edit-btn"
+                  (click)="openEditModal(customer)"
+                  title="Editar datos"
+                >
+                  ✏️ Editar
+                </button>
+                <button
+                  type="button"
+                  class="action-btn delete-btn"
+                  (click)="promptDelete(customer)"
+                  title="Eliminar cliente"
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </main>
 
 <!-- Modal de Formulario (Crear / Editar) -->
 <app-customer-form-modal
