@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DatabasePoolConfigurationSchema",
+  "description": "Validation schema for database connection URL parameters and environment options",
+  "type": "object",
+  "required": ["DATABASE_URL"],
+  "properties": {
+    "DATABASE_URL": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^postgresql://.*",
+      "description": "Transaction pooler connection URL (Supabase PgBouncer on port 6543) containing pgbouncer=true, connection_limit, and pool_timeout"
+    },
+    "DIRECT_URL": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^postgresql://.*",
+      "description": "Direct PostgreSQL connection URL (port 5432) reserved exclusively for Prisma schema migrations"
+    },
+    "DB_CONNECTION_LIMIT": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "default": 10,
+      "description": "Fallback connection pool size per API instance if not embedded in DATABASE_URL"
+    },
+    "DB_POOL_TIMEOUT_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 5,
+      "description": "Seconds to queue requests before failing with HTTP 503 when pool is saturated"
+    },
+    "DB_TX_TIMEOUT_MS": {
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 60000,
+      "default": 10000,
+      "description": "Maximum execution duration for interactive Prisma transactions"
+    }
+  }
+}

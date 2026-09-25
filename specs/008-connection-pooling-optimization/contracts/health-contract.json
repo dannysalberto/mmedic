@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HealthCheckResponseWithPoolMetrics",
+  "description": "JSON schema for the enhanced GET /health endpoint including database pool resilience metrics",
+  "type": "object",
+  "required": ["status", "service", "version", "uptime", "database", "timestamp"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["ok", "degraded", "error"]
+    },
+    "service": {
+      "type": "string",
+      "example": "mmedic-api"
+    },
+    "version": {
+      "type": "string",
+      "example": "1.0.0"
+    },
+    "uptime": {
+      "type": "integer",
+      "minimum": 0,
+      "example": 3600
+    },
+    "database": {
+      "type": "object",
+      "required": ["status", "pool"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["connected", "degraded", "disconnected"]
+        },
+        "latencyMs": {
+          "type": "number",
+          "example": 12.5
+        },
+        "pool": {
+          "type": "object",
+          "required": [
+            "limit",
+            "activeQueries",
+            "totalQueries",
+            "totalErrors",
+            "saturationWarning",
+            "p95LatencyMs"
+          ],
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 10
+            },
+            "activeQueries": {
+              "type": "integer",
+              "minimum": 0,
+              "example": 2
+            },
+            "totalQueries": {
+              "type": "integer",
+              "minimum": 0,
+              "example": 15420
+            },
+            "totalErrors": {
+              "type": "integer",
+              "minimum": 0,
+              "example": 3
+            },
+            "retriedQueries": {
+              "type": "integer",
+              "minimum": 0,
+              "example": 2
+            },
+            "saturationWarning": {
+              "type": "boolean",
+              "example": false
+            },
+            "p95LatencyMs": {
+              "type": "number",
+              "example": 24.8
+            }
+          }
+        }
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "example": "2026-09-24T18:30:00.000Z"
+    }
+  }
+}

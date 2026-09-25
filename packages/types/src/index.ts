@@ -413,6 +413,27 @@ export interface VoidInvoiceDto {
 export * from './contributor';
 export * from './customer';
 
+export interface DatabasePoolMetrics {
+  limit: number;
+  activeQueries: number;
+  totalQueries: number;
+  totalErrors: number;
+  retriedQueries?: number;
+  saturationWarning: boolean;
+  p95LatencyMs: number;
+}
 
+export interface DatabaseHealthInfo {
+  status: 'connected' | 'degraded' | 'disconnected';
+  latencyMs?: number;
+  pool: DatabasePoolMetrics;
+}
 
-
+export interface DatabaseHealthResponse {
+  status: 'ok' | 'degraded' | 'error';
+  service: string;
+  version: string;
+  uptime: number;
+  database: DatabaseHealthInfo;
+  timestamp: string;
+}

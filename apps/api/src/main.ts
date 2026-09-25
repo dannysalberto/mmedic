@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
 
 async function bootstrap() {
@@ -32,9 +33,12 @@ async function bootstrap() {
     }),
   );
 
-  // Global Exception Filter para trazabilidad obligatoria en BD (Constitución 1.4)
+  // Global Exception Filters (Prisma pool & constraint handling + Global DB logging per Constitución 1.4)
   const prismaService = app.get(PrismaService);
-  app.useGlobalFilters(new GlobalExceptionFilter(prismaService));
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(prismaService),
+    new PrismaExceptionFilter(),
+  );
 
   // Global Multi-Tenant Interceptor (Constitución 2.3)
   app.useGlobalInterceptors(new TenantInterceptor());
