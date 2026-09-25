@@ -9,7 +9,7 @@
 
 .header-banner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-xl);
   padding: var(--space-xl);
@@ -48,6 +48,8 @@
   white-space: nowrap;
   box-shadow: var(--shadow-btn);
   transition: opacity 0.2s ease, transform 0.15s ease;
+  margin-left: auto;
+  align-self: flex-start;
 }
 .btn-create:hover { opacity: 0.92; transform: translateY(-1px); }
 
@@ -279,5 +281,6 @@
 
 @media (max-width: 640px) {
   .page-container { padding: var(--space-md); }
-  .header-banner { flex-direction: column; align-items: flex-start; }
+  .header-banner { flex-direction: column; align-items: stretch; gap: var(--space-md); padding: var(--space-md); }
+  .btn-create { width: 100%; margin-left: 0; text-align: center; }
 }

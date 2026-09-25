@@ -40,6 +40,7 @@
   cursor: pointer;
   box-shadow: var(--shadow-btn);
   transition: opacity 0.2s, transform 0.15s;
+  width: 100%;
 }
 
 .btn-primary:hover {
@@ -292,8 +293,16 @@
 
   .list-header {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: var(--space-md);
+  }
+
+  .list-header .btn-primary {
+    width: auto;
+    margin-left: auto;
+    white-space: nowrap;
+    align-self: flex-start;
   }
 
   .filter-dropdowns {

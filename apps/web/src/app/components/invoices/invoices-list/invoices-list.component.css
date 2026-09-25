@@ -8,10 +8,36 @@
 .list-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
+}
+
+.header-titles {
+  flex: 1;
+  min-width: 260px;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .header-actions {
+    width: 100%;
+  }
+  .header-actions .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .page-title {

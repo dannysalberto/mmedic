@@ -22,7 +22,15 @@
   gap: var(--space-md);
 }
 @media (min-width: 640px) {
-  .page-header { flex-direction: row; align-items: center; justify-content: space-between; }
+  .page-header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.title-area {
+  flex: 1;
 }
 
 .title-area h1 {
@@ -33,7 +41,32 @@
   letter-spacing: -0.02em;
 }
 .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
-.actions-area { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+
+.actions-area {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .actions-area {
+    width: auto;
+    margin-left: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
+@media (min-width: 1024px) {
+  .actions-area {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+  }
+}
 
 .btn {
   display: inline-flex;
@@ -135,10 +168,10 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  overflow: hidden;
+  overflow-x: auto;
 }
 
-/* Mobile: Hide table, show card list */
+/* Cards View (Mobile & Tablet: < 1024px) */
 .users-table { display: none; }
 .users-mobile-list {
   display: flex;
@@ -147,8 +180,17 @@
   padding: var(--space-md);
 }
 
-/* Desktop: Show table, hide card list */
-@media (min-width: 768px) {
+@media (min-width: 640px) and (max-width: 1023px) {
+  .users-mobile-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-md);
+  }
+}
+
+/* Desktop Table View (>= 1024px) */
+@media (min-width: 1024px) {
   .users-table { width: 100%; border-collapse: collapse; text-align: left; display: table; }
   .users-mobile-list { display: none; }
 }
@@ -248,8 +290,8 @@
 .card-header-user { display: flex; justify-content: space-between; align-items: center; }
 .card-meta { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem; color: var(--text-secondary); }
 .card-meta strong { color: var(--text-primary); }
-.perm-count-text { color: var(--accent-cyan-light); font-weight: 600; }
 .card-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); }
+.card-actions .btn { flex: 1; min-width: 90px; justify-content: center; }
 
 .loading-box, .empty-box {
   padding: 3rem;
