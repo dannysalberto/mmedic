@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User, CreateUserDto, UpdateUserDto, ApiResponse, UserRole } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 export interface PaginatedUsersResponse {
   items: (User & { specialPermissionsCount?: number })[];
@@ -15,7 +16,7 @@ export interface PaginatedUsersResponse {
 })
 export class UsersService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/users';
+  private readonly apiUrl = `${getApiBaseUrl()}/users`;
 
   getUsers(
     page = 1,

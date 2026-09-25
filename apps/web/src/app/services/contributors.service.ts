@@ -9,13 +9,14 @@ import {
   DuplicateContributorGroup,
   ApiResponse,
 } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ContributorsService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/contributors';
+  private readonly apiUrl = `${getApiBaseUrl()}/contributors`;
 
   readonly contributors = signal<ContributorWithStats[]>([]);
   readonly loading = signal<boolean>(false);

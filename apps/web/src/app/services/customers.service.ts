@@ -2,13 +2,14 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { Customer, CreateCustomerDto, UpdateCustomerDto, ApiResponse } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CustomersService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/customers';
+  private readonly apiUrl = `${getApiBaseUrl()}/customers`;
 
   readonly customers = signal<Customer[]>([]);
   readonly loading = signal<boolean>(false);

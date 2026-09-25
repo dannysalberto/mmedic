@@ -9,13 +9,14 @@ import {
   CreateCategoryDto,
   ApiResponse,
 } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CategoriesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/article-categories';
+  private readonly apiUrl = `${getApiBaseUrl()}/article-categories`;
 
   readonly categories = signal<CategoryWithStats[]>([]);
   readonly loading = signal<boolean>(false);

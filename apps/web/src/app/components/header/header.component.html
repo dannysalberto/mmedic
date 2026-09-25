@@ -13,22 +13,24 @@
     <nav class="desktop-nav">
       <ul class="nav-links">
         <!-- Dropdown Módulos con Mega Menu -->
-        <li
-          class="nav-link-item has-dropdown"
-          (mouseenter)="openMegaMenu()"
-          (click)="toggleMegaMenu()"
-        >
-          <button
-            type="button"
-            class="nav-link dropdown-trigger"
-            [class.active]="isMegaMenuOpen()"
-            aria-haspopup="true"
-            [attr.aria-expanded]="isMegaMenuOpen()"
+        @if (isAuthenticated()) {
+          <li
+            class="nav-link-item has-dropdown"
+            (mouseenter)="openMegaMenu()"
+            (click)="toggleMegaMenu()"
           >
-            <span>Módulos</span>
-            <span class="dropdown-chevron" [class.rotated]="isMegaMenuOpen()">▾</span>
-          </button>
-        </li>
+            <button
+              type="button"
+              class="nav-link dropdown-trigger"
+              [class.active]="isMegaMenuOpen()"
+              aria-haspopup="true"
+              [attr.aria-expanded]="isMegaMenuOpen()"
+            >
+              <span>Módulos</span>
+              <span class="dropdown-chevron" [class.rotated]="isMegaMenuOpen()">▾</span>
+            </button>
+          </li>
+        }
 
         <li class="nav-link-item">
           <button type="button" class="nav-link" (click)="openModal('about')">
@@ -57,22 +59,24 @@
         <span class="tenant-name">Clínica Central</span>
       </div>
 
-      <a routerLink="/articles" class="btn-header-cta">
-        <span class="cta-icon">📦</span>
-        <span>Catálogo</span>
-      </a>
+      @if (isAuthenticated()) {
+        <a routerLink="/articles" class="btn-header-cta">
+          <span class="cta-icon">📦</span>
+          <span>Catálogo</span>
+        </a>
 
-      <!-- Botón Hamburguesa para Mobile -->
-      <button
-        class="mobile-toggle-btn"
-        (click)="toggleMobileMenu()"
-        aria-label="Abrir menú de navegación"
-        [attr.aria-expanded]="isMenuOpen()"
-      >
-        <span class="bar" [class.open]="isMenuOpen()"></span>
-        <span class="bar" [class.open]="isMenuOpen()"></span>
-        <span class="bar" [class.open]="isMenuOpen()"></span>
-      </button>
+        <!-- Botón Hamburguesa para Mobile -->
+        <button
+          class="mobile-toggle-btn"
+          (click)="toggleMobileMenu()"
+          aria-label="Abrir menú de navegación"
+          [attr.aria-expanded]="isMenuOpen()"
+        >
+          <span class="bar" [class.open]="isMenuOpen()"></span>
+          <span class="bar" [class.open]="isMenuOpen()"></span>
+          <span class="bar" [class.open]="isMenuOpen()"></span>
+        </button>
+      }
     </div>
   </div>
 
@@ -413,61 +417,63 @@
 <!-- ============================================== -->
 <!-- BARRA DE MENÚ INFERIOR FIJA PARA MOBILE (5 ÍCONOS) -->
 <!-- ============================================== -->
-<nav class="mobile-bottom-nav" aria-label="Navegación Móvil Principal">
-  <button
-    type="button"
-    class="bottom-nav-item"
-    [class.active]="activeBottomTab() === 'home'"
-    (click)="selectBottomTab('home')"
-    routerLink="/"
-  >
-    <span class="bottom-icon">🏠</span>
-    <span class="bottom-label">Inicio</span>
-  </button>
+@if (isAuthenticated()) {
+  <nav class="mobile-bottom-nav" aria-label="Navegación Móvil Principal">
+    <button
+      type="button"
+      class="bottom-nav-item"
+      [class.active]="activeBottomTab() === 'home'"
+      (click)="selectBottomTab('home')"
+      routerLink="/"
+    >
+      <span class="bottom-icon">🏠</span>
+      <span class="bottom-label">Inicio</span>
+    </button>
 
-  <button
-    type="button"
-    class="bottom-nav-item"
-    [class.active]="activeBottomTab() === 'articles'"
-    (click)="selectBottomTab('articles')"
-    routerLink="/articles"
-  >
-    <span class="bottom-icon">📦</span>
-    <span class="bottom-label">Artículos</span>
-    <span class="bottom-badge-dot"></span>
-  </button>
+    <button
+      type="button"
+      class="bottom-nav-item"
+      [class.active]="activeBottomTab() === 'articles'"
+      (click)="selectBottomTab('articles')"
+      routerLink="/articles"
+    >
+      <span class="bottom-icon">📦</span>
+      <span class="bottom-label">Artículos</span>
+      <span class="bottom-badge-dot"></span>
+    </button>
 
-  <button
-    type="button"
-    class="bottom-nav-item"
-    [class.active]="activeBottomTab() === 'appointments'"
-    (click)="selectBottomTab('appointments')"
-  >
-    <span class="bottom-icon">📅</span>
-    <span class="bottom-label">Citas</span>
-  </button>
+    <button
+      type="button"
+      class="bottom-nav-item"
+      [class.active]="activeBottomTab() === 'appointments'"
+      (click)="selectBottomTab('appointments')"
+    >
+      <span class="bottom-icon">📅</span>
+      <span class="bottom-label">Citas</span>
+    </button>
 
-  <button
-    type="button"
-    class="bottom-nav-item"
-    [class.active]="activeBottomTab() === 'patients'"
-    (click)="selectBottomTab('patients')"
-    routerLink="/customers"
-  >
-    <span class="bottom-icon">👥</span>
-    <span class="bottom-label">Pacientes</span>
-  </button>
+    <button
+      type="button"
+      class="bottom-nav-item"
+      [class.active]="activeBottomTab() === 'patients'"
+      (click)="selectBottomTab('patients')"
+      routerLink="/customers"
+    >
+      <span class="bottom-icon">👥</span>
+      <span class="bottom-label">Pacientes</span>
+    </button>
 
-  <button
-    type="button"
-    class="bottom-nav-item"
-    [class.active]="activeBottomTab() === 'more' || isMenuOpen()"
-    (click)="selectBottomTab('more')"
-  >
-    <span class="bottom-icon">☰</span>
-    <span class="bottom-label">Más</span>
-  </button>
-</nav>
+    <button
+      type="button"
+      class="bottom-nav-item"
+      [class.active]="activeBottomTab() === 'more' || isMenuOpen()"
+      (click)="selectBottomTab('more')"
+    >
+      <span class="bottom-icon">☰</span>
+      <span class="bottom-label">Más</span>
+    </button>
+  </nav>
+}
 
 <!-- Modales informativos -->
 @if (activeModal(); as modal) {

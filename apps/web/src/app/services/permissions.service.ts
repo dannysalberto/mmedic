@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SpecialPermission, CheckPermissionResponseData, ApiResponse } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PermissionsService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/permissions';
+  private readonly apiUrl = `${getApiBaseUrl()}/permissions`;
 
   getCatalog(): Observable<ApiResponse<SpecialPermission[]>> {
     return this.http.get<ApiResponse<SpecialPermission[]>>(this.apiUrl);

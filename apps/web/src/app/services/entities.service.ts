@@ -9,13 +9,14 @@ import {
   DuplicateEntityGroup,
   ApiResponse,
 } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class EntitiesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/entities';
+  private readonly apiUrl = `${getApiBaseUrl()}/entities`;
 
   readonly entities = signal<EntityWithStats[]>([]);
   readonly loading = signal<boolean>(false);

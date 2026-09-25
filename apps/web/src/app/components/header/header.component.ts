@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 export type MegaTab = 'articles' | 'clinical' | 'billing' | 'patients' | 'config';
 
@@ -12,6 +13,9 @@ export type MegaTab = 'articles' | 'clinical' | 'billing' | 'patients' | 'config
   styleUrls: ['./header.component.css'],
 })
 export class HeaderComponent {
+  private readonly authService = inject(AuthService);
+  readonly isAuthenticated = this.authService.isAuthenticated;
+
   // Mobile drawer state
   readonly isMenuOpen = signal(false);
 

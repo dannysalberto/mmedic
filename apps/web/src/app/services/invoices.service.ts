@@ -10,13 +10,14 @@ import {
   InvoiceStatus,
   ApiResponse,
 } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class InvoicesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/invoices';
+  private readonly apiUrl = `${getApiBaseUrl()}/invoices`;
 
   readonly invoices = signal<InvoiceWithDetails[]>([]);
   readonly loading = signal<boolean>(false);

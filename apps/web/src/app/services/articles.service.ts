@@ -7,13 +7,14 @@ import {
   UpdateArticleDto,
   ApiResponse,
 } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ArticlesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/articles';
+  private readonly apiUrl = `${getApiBaseUrl()}/articles`;
 
   readonly articles = signal<Article[]>([]);
   readonly loading = signal<boolean>(false);

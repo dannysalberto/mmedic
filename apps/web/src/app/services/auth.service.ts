@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { User, LoginDto, LoginResponseData, ApiResponse } from '@mmedic/types';
+import { getApiBaseUrl } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +11,7 @@ import { User, LoginDto, LoginResponseData, ApiResponse } from '@mmedic/types';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly apiUrl = 'http://localhost:3000/api/v1/auth';
+  private readonly apiUrl = `${getApiBaseUrl()}/auth`;
 
   // Signals reactivos (Constitución 4.1)
   readonly currentUser = signal<User | null>(this.getStoredUser());
