@@ -1,15 +1,22 @@
 import { NestFactory } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import express, { Express } from 'express';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
 
-async function bootstrap() {
-  const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+const server: Express = express();
+let isAppInitialized = false;
+
+export async function createNestServer(expressInstance: Express) {
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(expressInstance),
+  );
 
   // Enable CORS for Next.js Web and Mobile Apps
   app.enableCors({
@@ -57,11 +64,31 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-
-  logger.log(`🚀 MMedic API is running on: http://localhost:${port}/api/v1`);
-  logger.log(`📚 Swagger documentation available at: http://localhost:${port}/api/docs`);
+  await app.init();
+  return app;
 }
 
-bootstrap();
+// Standalone mode for local development, Docker, or traditional environments
+async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+  await createNestServer(server);
+  const port = process.env.PORT || 3000;
+  server.listen(port, () => {
+    logger.log(`🚀 MMedic API is running on: http://localhost:${port}/api/v1`);
+    logger.log(`📚 Swagger documentation available at: http://localhost:${port}/api/docs`);
+  });
+}
+
+if (!process.env.VERCEL) {
+  bootstrap();
+}
+
+// Serverless handler for Vercel
+export default async function handler(req: any, res: any) {
+  if (!isAppInitialized) {
+    await createNestServer(server);
+    isAppInitialized = true;
+  }
+  return server(req, res);
+}
+
