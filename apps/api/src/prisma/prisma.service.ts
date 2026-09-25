@@ -25,15 +25,22 @@ export class PrismaService
   constructor(private readonly metricsService: PrismaMetricsService) {
     const config = resolvePoolConfig();
     const rawUrl = process.env.DATABASE_URL || '';
-    const pooledUrl = buildPooledDatabaseUrl(rawUrl, config);
+    const hasValidUrl = Boolean(
+      rawUrl && (rawUrl.startsWith('postgres://') || rawUrl.startsWith('postgresql://')),
+    );
+    const effectiveUrl = hasValidUrl
+      ? buildPooledDatabaseUrl(rawUrl, config)
+      : 'postgresql://unconfigured_db:unconfigured_db@127.0.0.1:5432/mmedic?connect_timeout=1';
 
-    // Synchronize process.env so any downstream consumers share the pooled configuration
-    process.env.DATABASE_URL = pooledUrl;
+    if (hasValidUrl) {
+      // Synchronize process.env so any downstream consumers share the pooled configuration
+      process.env.DATABASE_URL = effectiveUrl;
+    }
 
     super({
       datasources: {
         db: {
-          url: pooledUrl,
+          url: effectiveUrl,
         },
       },
       log:

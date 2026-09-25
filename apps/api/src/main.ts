@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
@@ -85,10 +86,22 @@ if (!process.env.VERCEL) {
 
 // Serverless handler for Vercel
 export default async function handler(req: any, res: any) {
-  if (!isAppInitialized) {
-    await createNestServer(server);
-    isAppInitialized = true;
+  try {
+    if (!isAppInitialized) {
+      await createNestServer(server);
+      isAppInitialized = true;
+    }
+    return server(req, res);
+  } catch (error: any) {
+    const logger = new Logger('VercelHandler');
+    logger.error(`Failed to handle serverless request: ${error.message}`, error.stack);
+    if (!res.headersSent) {
+      res.status(500).json({
+        statusCode: 500,
+        message: 'Internal server error initializing NestJS API on Vercel',
+        error: error.message,
+      });
+    }
   }
-  return server(req, res);
 }
 
