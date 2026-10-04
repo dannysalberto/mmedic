@@ -1,12 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 2.5.0 -> 2.6.0
+- Version change: 2.6.0 -> 2.7.0
 - Ratification Date: 2026-09-20
-- Last Amended Date: 2026-09-22
+- Last Amended Date: 2026-10-04
 - Modified Principles:
-  * Principle V: Estándares UI/UX y Sistema de Diseño Centralizado (Adición de Subsección 5.4: Notificaciones Transversales Push y Retención de Navegación)
+  * Principle V: Estándares UI/UX y Sistema de Diseño Centralizado (Enmienda de Subsección 5.3: Mandato Estricto Mobile-First en Formularios, Modales y Componentes de Entrada — Disposición Unicolumna en Móvil)
 - Added Sections:
-  * Quality Gate de Notificaciones Push y Navegación No Intrusiva en la Matriz de Criterios de Aceptación Técnicos (Sección 3)
+  * Quality Gate de Disposición Unicolumna Mobile-First y Cero Truncamiento en la Matriz de Criterios de Aceptación Técnicos (Sección 3)
 -->
 
 # CONSTITUCIÓN ARQUITECTÓNICA DEL SISTEMA MMEDIC
@@ -16,7 +16,7 @@ Sync Impact Report
 
 ## 1. Preámbulo y Alcance
 
-El presente documento constituye la **Constitución Técnica de Software** para la plataforma **MMedic**. Establece las directivas de arquitectura, estándares de codificación, controles de seguridad y políticas de higiene de memoria de cumplimiento estricto y no negociable. El sistema opera estructuralmente bajo un paradigma **Multi-Tenant nativo por defecto** en todas sus capas y módulos, y bajo una directiva vinculante de **Desarrollo Dual y Paridad de Plataformas (Web y Android por defecto)**.
+El presente documento constituye la **Constitución Técnica de Software** para la plataforma **MMedic**. Establece las directivas de arquitectura, estándares de codificación, controles de seguridad y políticas de higiene de memoria de cumplimiento estricto y no negociable. El sistema opera estructuralmente bajo un paradigma **Multi-Tenant nativo por defecto** en todas sus capas y módulos, bajo una directiva vinculante de **Desarrollo Dual y Paridad de Plataformas (Web y Android por defecto)**, y bajo el principio inexcusable de **Desarrollo y Diseño Mobile-First Obligatorio** en todas las interfaces de usuario.
 
 Aplica de forma vinculante a todas las capas y componentes del monorepo:
 1. **Backend Unificado**: API REST desacoplada y agnóstica al cliente.
@@ -174,12 +174,19 @@ Para garantizar estabilidad y prevenir fugas de memoria (*memory leaks*):
   - Soporte de Temas (Modo Oscuro / Modo Claro) gobernado por atributos raíz y variables CSS.
 
 #### 5.3. Filosofía Mobile-First y Diseño Totalmente Adaptativo (Responsive Cross-Device)
-- **Directiva Mobile-First Obligatoria**: Todo componente, vista, pantalla y flujo de usuario debe diseñarse, maquetarse y validarse de manera prioritaria para dispositivos móviles y pantallas reducidas, aplicando principios de mejora progresiva (*progressive enhancement*) hacia viewports de mayor escala.
+- **Directiva Mobile-First Obligatoria e Inexcusable**: Todo componente, vista, pantalla, modal, formulario y flujo de usuario **DEBE** diseñarse, maquetarse y validarse de manera prioritaria para dispositivos móviles y pantallas reducidas, aplicando principios de mejora progresiva (*progressive enhancement*) hacia viewports de mayor escala.
+- **Mandato Estricto de Formularios y Modales Mobile-First (Disposición Unicolumna Obligatoria en Móvil)**:
+  - En dispositivos móviles (< 640px), todos los campos de formulario, controles de entrada (`input`, `select`, `textarea`), filas (`form-row`, `grid-2-col`) y modales deben organizarse en **una sola columna vertical apilada (`flex-direction: column` o `grid-template-columns: 1fr`) al 100% del ancho disponible**.
+  - Queda expresamente prohibido colocar campos adyacentes horizontalmente (dos o más columnas) en vistas móviles si esto comprime etiquetas, trunca textos, placeholders o valores ingresados (ej. teléfono y correo electrónico juntos), o compromete la ergonomía táctil.
+  - La transición a disposiciones de dos o más columnas se realizará **exclusivamente a través de media queries ascendentes (`@media (min-width: 640px)`)** para pantallas medianas o de escritorio.
+  - Las hojas de estilo (CSS) deben definir los estilos base para móvil sin media queries; el uso de media queries descendentes (`max-width`) queda prohibido.
+  - Los botones de acción de formularios y modales en pantallas móviles deben garantizar visibilidad completa y ergonomía táctil sin desbordamientos ni colisiones.
 - **Cobertura y Comportamiento por Rango de Pantalla**:
   1. **Dispositivos Móviles y Pantallas Chicas (< 640px)**: 
      - Interfaces táctiles fluidas con áreas de toque accesibles (mínimo 44x44px).
+     - Formularios estrictamente unicolumna (`1fr` / `flex-direction: column`).
      - Tipografía legible sin necesidad de zoom ni desplazamiento lateral.
-     - **Tolerancia Cero al Overflow Horizontal**: Queda estrictamente prohibido el desbordamiento horizontal involuntario (`overflow-x`) en pantallas pequeñas; los contenedores, tablas y modales deben reorganizarse en tarjetas (*cards*) o utilizar scrolls internos delimitados.
+     - **Tolerancia Cero al Overflow Horizontal y Truncamiento**: Queda estrictamente prohibido el desbordamiento horizontal involuntario (`overflow-x`) o truncamiento de texto/campos en pantallas pequeñas; los contenedores, tablas y modales deben reorganizarse en tarjetas (*cards*) o utilizar scrolls internos delimitados.
   2. **Tablets y Pantallas Medianas (640px a 1024px)**: 
      - Reorganización de layouts hacia grillas de 2 a 3 columnas, adaptando menús de navegación a formatos tipo *rail* o barras superiores dinámicas según la orientación (vertical u horizontal).
   3. **Escritorio y Pantallas Grandes / PC (> 1024px)**: 
@@ -211,7 +218,7 @@ Para garantizar estabilidad y prevenir fugas de memoria (*memory leaks*):
 | **Higiene de Memoria** | Uso estricto de `takeUntilDestroyed` o cancelación en destrucción. | ESLint RxJS / Profiler |
 | **Trazabilidad de Errores en BD** | 100% de errores/excepciones backend persistidos en BD (fichero, línea, mensaje, descripción, usuario, fecha, tipo). | Exception Filters / Logger Service / Tests E2E |
 | **Control de Migraciones en BD** | 100% de tablas, columnas (altas/bajas) y datos insertados gestionados vía migraciones versionadas de Prisma. | Prisma CLI (`prisma migrate status`) / CI Gates |
-| **Diseño Mobile-First y Adaptativo** | 100% de vistas funcionales sin overflow horizontal en móviles (<640px), tablets (640-1024px) y PC (>1024px). | Browser DevTools / Viewport Tests / Lighthouse |
+| **Diseño Mobile-First y Adaptativo** | 100% de vistas, modales y formularios con disposición unicolumna en móviles (<640px), sin overflow horizontal ni truncamiento de datos en móviles (<640px), tablets (640-1024px) y PC (>1024px). | Browser DevTools / Viewport Tests / Lighthouse |
 | **Compilación y Build** | Cero errores o advertencias en `pnpm build` de todo el monorepo. | Turborepo Pipeline |
 
 ---
@@ -226,7 +233,7 @@ Para garantizar estabilidad y prevenir fugas de memoria (*memory leaks*):
 
 ---
 
-**Versión Constitucional**: 2.6.0  
+**Versión Constitucional**: 2.7.0  
 **Fecha de Ratificación**: 2026-09-20  
-**Fecha de Última Enmienda**: 2026-09-22  
+**Fecha de Última Enmienda**: 2026-10-04  
 **Estado**: ACTIVA Y VINCULANTE
