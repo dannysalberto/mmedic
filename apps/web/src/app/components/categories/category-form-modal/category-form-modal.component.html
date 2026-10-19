@@ -32,6 +32,23 @@
           <span class="form-hint">Entre 2 y 100 caracteres. Nombre único por organización.</span>
         </div>
 
+        <div class="form-group">
+          <label class="form-label" for="input-categoria-semilla">Semilla / Prefijo Correlativo</label>
+          <input
+            type="text"
+            id="input-categoria-semilla"
+            class="form-control"
+            style="text-transform: uppercase; font-family: monospace;"
+            [ngModel]="seed()"
+            (ngModelChange)="seed.set($event)"
+            name="seed"
+            placeholder="Ej: CONS, EXAM, LAB (Opcional, 2-6 letras)"
+            maxlength="6"
+            [disabled]="isSubmitting()"
+          />
+          <span class="form-hint">Prefijo para la numeración consecutiva de artículos. Si se omite, se generará automáticamente.</span>
+        </div>
+
         @if (categoryToEdit()) {
           <div class="info-banner">
             <span class="info-icon">ℹ️</span>

@@ -21,8 +21,8 @@ fun ArticleFormScreen(
     articleId: String? = null,
     onBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val isEditMode = articleId != null
+    var currentEditArticleId by remember { mutableStateOf<String?>(articleId) }
+    val isEditMode = currentEditArticleId != null
 
     var code by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
@@ -43,8 +43,41 @@ fun ArticleFormScreen(
     val totalPercentage = participants.sumOf { it.percentage }
     val isOverPercentage = totalPercentage > 100.001
 
-    val canSave = code.isNotBlank() &&
-            name.isNotBlank() &&
+    fun searchAndPopulate(searchCode: String) {
+        if (searchCode.isBlank()) return
+        viewModel.searchArticleByCode(searchCode) { article, errorMsg ->
+            if (article != null) {
+                currentEditArticleId = article.id
+                code = article.code
+                name = article.name
+                selectedCategoryId = article.categoryId
+                price1Str = article.price1.toString()
+                price2Str = article.price2?.toString() ?: ""
+                price3Str = article.price3?.toString() ?: ""
+                price4Str = article.price4?.toString() ?: ""
+                appliesVat = article.appliesVat
+                participants.clear()
+                article.participants?.forEach { p ->
+                    participants.add(
+                        ParticipantItemState(
+                            entityId = p.entityId,
+                            code = p.entity?.code ?: "",
+                            name = p.entity?.name ?: "Participante",
+                            percentage = p.percentage
+                        )
+                    )
+                }
+                NotificationManager.showSuccess(
+                    "Modo Edición activado",
+                    "Artículo '${article.name}' (${article.code}) cargado correctamente."
+                )
+            } else if (errorMsg != null) {
+                NotificationManager.showError("Búsqueda", errorMsg)
+            }
+        }
+    }
+
+    val canSave = name.isNotBlank() &&
             selectedCategoryId != null &&
             (price1Str.toDoubleOrNull() ?: -1.0) >= 0.0 &&
             !isOverPercentage &&
@@ -69,6 +102,22 @@ fun ArticleFormScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
+                    if (isEditMode) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        TextButton(onClick = {
+                            currentEditArticleId = null
+                            code = ""
+                            name = ""
+                            price1Str = ""
+                            price2Str = ""
+                            price3Str = ""
+                            price4Str = ""
+                            participants.clear()
+                            NotificationManager.showSuccess("Nuevo Registro", "Formulario reiniciado.")
+                        }) {
+                            Text("+ Nuevo", color = DarkPrimary, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         },
@@ -92,6 +141,8 @@ fun ArticleFormScreen(
                     selectedCategoryId = selectedCategoryId,
                     onCategorySelect = { selectedCategoryId = it },
                     onOpenNewCategoryDialog = { showCategoryDialog = true },
+                    onSearchCodeClick = { searchAndPopulate(code) },
+                    isEditMode = isEditMode,
                     appliesVat = appliesVat,
                     onAppliesVatChange = { appliesVat = it }
                 )
@@ -142,7 +193,7 @@ fun ArticleFormScreen(
 
                         if (isEditMode) {
                             viewModel.updateArticle(
-                                id = articleId!!,
+                                id = currentEditArticleId!,
                                 code = code.trim(),
                                 name = name.trim(),
                                 categoryId = selectedCategoryId!!,
@@ -227,8 +278,8 @@ fun ArticleFormScreen(
     if (showCategoryDialog) {
         CategoryDialog(
             onDismiss = { showCategoryDialog = false },
-            onConfirm = { catName ->
-                viewModel.createCategory(catName) { newCat ->
+            onConfirm = { catName, catSeed ->
+                viewModel.createCategory(catName, catSeed) { newCat ->
                     if (newCat != null) {
                         selectedCategoryId = newCat.id
                         NotificationManager.showSuccess(

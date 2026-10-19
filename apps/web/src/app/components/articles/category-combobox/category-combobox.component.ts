@@ -21,6 +21,9 @@ import { ArticleCategory } from '@mmedic/types';
   imports: [CommonModule, FormsModule],
   templateUrl: './category-combobox.component.html',
   styleUrls: ['./category-combobox.component.css'],
+  host: {
+    '[class.is-open]': 'isOpen()',
+  },
 })
 export class CategoryComboboxComponent implements OnInit {
   private readonly categoriesService = inject(CategoriesService);

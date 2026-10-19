@@ -112,10 +112,10 @@ class ArticlesViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(filteredArticles = filtered)
     }
 
-    fun createCategory(name: String, onComplete: (ArticleCategory?) -> Unit) {
+    fun createCategory(name: String, seed: String? = null, onComplete: (ArticleCategory?) -> Unit) {
         viewModelScope.launch {
             try {
-                val res = api.createCategory(CreateCategoryDto(name))
+                val res = api.createCategory(CreateCategoryDto(name = name, seed = seed?.ifBlank { null }))
                 if (res.success) {
                     loadCategories()
                     onComplete(res.data)
@@ -124,6 +124,21 @@ class ArticlesViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 onComplete(null)
+            }
+        }
+    }
+
+    fun searchArticleByCode(code: String, onResult: (Article?, String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = api.getArticleByCode(code.trim())
+                if (res.success && res.data != null) {
+                    onResult(res.data, null)
+                } else {
+                    onResult(null, "Artículo con código '${code.trim()}' no encontrado")
+                }
+            } catch (e: Exception) {
+                onResult(null, "No se encontró ningún artículo con código '${code.trim()}'")
             }
         }
     }
@@ -184,7 +199,7 @@ class ArticlesViewModel : ViewModel() {
                     ArticleParticipantItemDto(entityId = it.entityId, percentage = it.percentage)
                 }
                 val dto = CreateArticleDto(
-                    code = code,
+                    code = if (code.isBlank()) null else code.trim(),
                     name = name,
                     categoryId = categoryId,
                     price1 = p1,

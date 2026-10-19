@@ -5,23 +5,28 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto/create-category.dto';
 
-export interface UpdateCategoryDto {
-  name?: string;
-}
+export { UpdateCategoryDto };
 
 @Injectable()
 export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // T004 — findAll with articlesCount + multi-tenant filter
+  // T004 — findAll with articlesCount + multi-tenant filter + seed
   async findAll(tenantId: string, search?: string) {
     const trimmed = search?.trim();
     const rows = await this.prisma.articleCategory.findMany({
       where: {
         tenantId,
-        ...(trimmed ? { name: { contains: trimmed, mode: 'insensitive' } } : {}),
+        ...(trimmed
+          ? {
+              OR: [
+                { name: { contains: trimmed, mode: 'insensitive' } },
+                { seed: { contains: trimmed, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
       },
       include: { _count: { select: { articles: true } } },
       orderBy: { name: 'asc' },
@@ -31,6 +36,8 @@ export class CategoriesService {
       id: r.id,
       tenantId: r.tenantId,
       name: r.name,
+      seed: r.seed,
+      currentSequence: r.currentSequence,
       articlesCount: r._count.articles,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -44,10 +51,13 @@ export class CategoriesService {
       include: { _count: { select: { articles: true } } },
     });
     if (!row) throw new NotFoundException(`Categoría con ID "${id}" no encontrada`);
-    return { ...row, articlesCount: row._count.articles };
+    return {
+      ...row,
+      articlesCount: row._count.articles,
+    };
   }
 
-  // T006 — create with uniqueness check
+  // T006 — create with uniqueness check (name and seed)
   async create(dto: CreateCategoryDto, tenantId: string) {
     const trimmedName = dto.name.trim();
     const existing = await this.prisma.articleCategory.findFirst({
@@ -56,12 +66,33 @@ export class CategoriesService {
     if (existing) {
       throw new ConflictException(`Ya existe una categoría con el nombre "${trimmedName}"`);
     }
-    return this.prisma.articleCategory.create({ data: { tenantId, name: trimmedName } });
+
+    const seed = dto.seed
+      ? dto.seed.trim().toUpperCase()
+      : await this.generateUniqueSeed(trimmedName, tenantId);
+
+    const existingSeed = await this.prisma.articleCategory.findFirst({
+      where: { tenantId, seed },
+    });
+    if (existingSeed) {
+      throw new ConflictException(`Ya existe una categoría con la semilla o prefijo "${seed}"`);
+    }
+
+    return this.prisma.articleCategory.create({
+      data: {
+        tenantId,
+        name: trimmedName,
+        seed,
+        currentSequence: 0,
+      },
+    });
   }
 
   // T007 — update with uniqueness check
   async update(id: string, dto: UpdateCategoryDto, tenantId: string) {
     await this.findOne(id, tenantId);
+    const dataToUpdate: any = {};
+
     if (dto.name) {
       const trimmedName = dto.name.trim();
       const duplicate = await this.prisma.articleCategory.findFirst({
@@ -70,11 +101,43 @@ export class CategoriesService {
       if (duplicate) {
         throw new ConflictException(`Ya existe otra categoría con el nombre "${trimmedName}"`);
       }
+      dataToUpdate.name = trimmedName;
     }
+
+    if (dto.seed) {
+      const trimmedSeed = dto.seed.trim().toUpperCase();
+      const duplicateSeed = await this.prisma.articleCategory.findFirst({
+        where: { tenantId, seed: trimmedSeed, id: { not: id } },
+      });
+      if (duplicateSeed) {
+        throw new ConflictException(`Ya existe otra categoría con la semilla "${trimmedSeed}"`);
+      }
+      dataToUpdate.seed = trimmedSeed;
+    }
+
     return this.prisma.articleCategory.update({
       where: { id },
-      data: { ...(dto.name ? { name: dto.name.trim() } : {}) },
+      data: dataToUpdate,
     });
+  }
+
+  private async generateUniqueSeed(name: string, tenantId: string): Promise<string> {
+    const base = name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toUpperCase();
+
+    let candidate = base.slice(0, 4);
+    if (candidate.length < 2) candidate = 'CAT';
+
+    let count = 1;
+    let finalSeed = candidate;
+    while (await this.prisma.articleCategory.findFirst({ where: { tenantId, seed: finalSeed } })) {
+      finalSeed = `${candidate.slice(0, 3)}${count}`;
+      count++;
+    }
+    return finalSeed;
   }
 
   // T008 — Safe Delete Rule

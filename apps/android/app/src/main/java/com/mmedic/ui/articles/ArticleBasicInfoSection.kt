@@ -27,6 +27,8 @@ fun ArticleBasicInfoSection(
     selectedCategoryId: String?,
     onCategorySelect: (String) -> Unit,
     onOpenNewCategoryDialog: () -> Unit,
+    onSearchCodeClick: () -> Unit = {},
+    isEditMode: Boolean = false,
     appliesVat: Boolean = false,
     onAppliesVatChange: (Boolean) -> Unit = {}
 ) {
@@ -39,40 +41,41 @@ fun ArticleBasicInfoSection(
         colors = CardDefaults.cardColors(containerColor = DarkCard)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Información Principal",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = DarkPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Información Principal",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkPrimary
+                )
+                if (isEditMode) {
+                    Surface(
+                        color = Color(0xFF6B21A8).copy(alpha = 0.3f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA855F7)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "Modo Edición",
+                            color = Color(0xFFD8B4FE),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            OutlinedTextField(
-                value = code,
-                onValueChange = onCodeChange,
-                label = { Text("Código de Artículo *") },
-                placeholder = { Text("Ej: CONS-001") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = onNameChange,
-                label = { Text("Nombre del Artículo / Producto *") },
-                placeholder = { Text("Ej: Consulta General de Medicina") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
+            // 1. CATEGORÍA PRIMERO
             Text(
                 text = "Categoría *",
                 fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
                 color = Color(0xFF94A3B8),
                 modifier = Modifier.padding(bottom = 4.dp)
             )
@@ -90,7 +93,7 @@ fun ArticleBasicInfoSection(
                         .padding(horizontal = 12.dp, vertical = 14.dp)
                 ) {
                     Text(
-                        text = selectedCategory?.name ?: "Seleccione una categoría",
+                        text = selectedCategory?.let { "${it.name} (${it.seed})" } ?: "Seleccione una categoría",
                         color = if (selectedCategory != null) Color.White else Color(0xFF94A3B8),
                         fontSize = 14.sp
                     )
@@ -101,7 +104,7 @@ fun ArticleBasicInfoSection(
                     ) {
                         categories.forEach { cat ->
                             DropdownMenuItem(
-                                text = { Text(cat.name) },
+                                text = { Text("${cat.name} (${cat.seed})") },
                                 onClick = {
                                     onCategorySelect(cat.id)
                                     categoryDropdownExpanded = false
@@ -121,6 +124,48 @@ fun ArticleBasicInfoSection(
                     Text("+ Nueva", fontSize = 12.sp)
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. CÓDIGO CON LUPA Y AUTO-SUGERENCIA
+            val codePlaceholder = if (selectedCategory != null) {
+                "Auto: ${selectedCategory.seed}-${String.format("%03d", selectedCategory.currentSequence + 1)}"
+            } else {
+                "Ej: CONS-001 (o buscar)"
+            }
+
+            OutlinedTextField(
+                value = code,
+                onValueChange = onCodeChange,
+                label = { Text(if (isEditMode) "Código de Artículo (Existente)" else "Código de Artículo (Opcional)") },
+                placeholder = { Text(codePlaceholder) },
+                singleLine = true,
+                trailingIcon = {
+                    IconButton(onClick = onSearchCodeClick) {
+                        Text("🔍", fontSize = 16.sp)
+                    }
+                },
+                supportingText = {
+                    Text(
+                        text = if (isEditMode) "Artículo cargado para modificación" else "Presione 🔍 para buscar o déjelo vacío para autogenerar",
+                        fontSize = 11.sp,
+                        color = Color(0xFF94A3B8)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 3. NOMBRE
+            OutlinedTextField(
+                value = name,
+                onValueChange = onNameChange,
+                label = { Text("Nombre del Artículo / Producto *") },
+                placeholder = { Text("Ej: Consulta General de Medicina") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

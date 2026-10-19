@@ -24,24 +24,75 @@
   } @else {
     <form (ngSubmit)="onSubmit()" class="article-form">
       <!-- Sección 1: Información General -->
-      <div class="form-section glass-panel">
-        <h3 class="section-title">1. Información General</h3>
+      <div
+        class="form-section glass-panel"
+        [class.has-open-dropdown]="categoryCombobox.isOpen()"
+      >
+        <div class="section-title-bar">
+          <h3 class="section-title">1. Información General</h3>
+          @if (isEditMode()) {
+            <div class="edit-mode-indicator">
+              <span class="badge-edit-mode">Modo Edición: <strong>{{ code() }}</strong></span>
+              <button
+                type="button"
+                class="btn-reset-new"
+                (click)="resetToNew()"
+                title="Volver al modo de creación de nuevo artículo"
+              >
+                + Nuevo Registro
+              </button>
+            </div>
+          }
+        </div>
 
+        <!-- Fila 1: Categoría Primero y luego Código -->
         <div class="grid-2-col">
-          <div class="form-group">
-            <label for="articleCode" class="form-label">Código de Artículo *</label>
-            <input
-              id="articleCode"
-              type="text"
-              class="form-input"
-              placeholder="Ej: CONS-001 o RAD-RX-01"
-              [ngModel]="code()"
-              (ngModelChange)="code.set($event)"
-              name="code"
-              required
-            />
+          <div class="form-group category-form-group">
+            <label class="form-label">Categoría del Artículo *</label>
+            <app-category-combobox
+              #categoryCombobox
+              [selectedCategoryId]="categoryId()"
+              (categorySelected)="onCategorySelected($event)"
+            ></app-category-combobox>
+            <span class="field-hint">La categoría determina la serie numérica correlativa (ej: CONS-001)</span>
           </div>
 
+          <div class="form-group">
+            <label for="articleCode" class="form-label">
+              Código de Artículo
+              <span class="label-badge">{{ isEditMode() ? 'Existente' : 'Automático / Búsqueda' }}</span>
+            </label>
+            <div class="code-input-group">
+              <input
+                id="articleCode"
+                type="text"
+                class="form-input code-input-field"
+                [placeholder]="codePlaceholder()"
+                [ngModel]="code()"
+                (ngModelChange)="code.set($event)"
+                (keydown.enter)="$event.preventDefault(); searchByCode()"
+                (blur)="searchByCode()"
+                name="code"
+              />
+              <button
+                type="button"
+                class="btn-search-trigger"
+                (click)="openSearchModal()"
+                title="Buscar artículo en el catálogo"
+                aria-label="Buscar artículo en el catálogo"
+              >
+                🔍
+              </button>
+              @if (isSearchingCode()) {
+                <span class="code-search-spinner" title="Buscando...">⏳</span>
+              }
+            </div>
+            <span class="field-hint">Presiona Enter o Tab para buscar. Se autogenerará si lo dejas vacío al guardar.</span>
+          </div>
+        </div>
+
+        <!-- Fila 2: Nombre y Opciones Fiscales -->
+        <div class="grid-2-col mt-md">
           <div class="form-group">
             <label for="articleName" class="form-label">Nombre del Artículo / Producto *</label>
             <input
@@ -54,16 +105,6 @@
               name="name"
               required
             />
-          </div>
-        </div>
-
-        <div class="grid-2-col mt-md">
-          <div class="form-group">
-            <label class="form-label">Categoría del Artículo *</label>
-            <app-category-combobox
-              [selectedCategoryId]="categoryId()"
-              (categorySelected)="onCategorySelected($event)"
-            ></app-category-combobox>
           </div>
 
           <div class="form-group checkbox-group">
@@ -221,4 +262,11 @@
       </div>
     </form>
   }
+
+  <app-article-search-modal
+    [isOpen]="isSearchModalOpen()"
+    (articleSelected)="onArticleSelectedFromModal($event)"
+    (closeModal)="closeSearchModal()"
+  ></app-article-search-modal>
 </div>
+

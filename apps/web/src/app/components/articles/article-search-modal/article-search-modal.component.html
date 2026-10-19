@@ -1,0 +1,59 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-dialog glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Buscar Artículo / Producto</h3>
+          <p class="modal-subtitle">Selecciona un artículo del catálogo para cargarlo en el formulario</p>
+        </div>
+        <button type="button" class="btn-close" (click)="onClose()" title="Cerrar modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Buscar por código, nombre o descripción..."
+            [ngModel]="searchTerm()"
+            (ngModelChange)="onSearchChange($event)"
+            autofocus
+          />
+        </div>
+
+        @if (isLoading()) {
+          <div class="loading-state">
+            <span class="spinner">⏳</span>
+            <p>Buscando artículos...</p>
+          </div>
+        } @else {
+          <div class="results-list">
+            @for (article of articlesList(); track article.id) {
+              <button type="button" class="result-item" (click)="onSelect(article)">
+                <div class="item-main">
+                  <span class="item-code">{{ article.code }}</span>
+                  <span class="item-name">{{ article.name }}</span>
+                </div>
+                <div class="item-meta">
+                  @if (article.category?.name) {
+                    <span class="category-pill">{{ article.category?.name }}</span>
+                  }
+                  <span class="price-pill">${{ article.price1 | number:'1.2-2' }}</span>
+                </div>
+              </button>
+            } @empty {
+              <div class="empty-state">
+                <p>No se encontraron artículos que coincidan con la búsqueda.</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="onClose()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}

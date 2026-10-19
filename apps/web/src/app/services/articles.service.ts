@@ -55,6 +55,10 @@ export class ArticlesService {
     return this.http.get<ApiResponse<Article>>(`${this.apiUrl}/${id}`);
   }
 
+  getArticleByCode(code: string): Observable<ApiResponse<Article>> {
+    return this.http.get<ApiResponse<Article>>(`${this.apiUrl}/code/${encodeURIComponent(code.trim())}`);
+  }
+
   createArticle(dto: CreateArticleDto): Observable<ApiResponse<Article>> {
     return this.http.post<ApiResponse<Article>>(this.apiUrl, dto).pipe(
       tap((res) => {

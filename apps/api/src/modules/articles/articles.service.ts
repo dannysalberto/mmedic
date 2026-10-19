@@ -108,24 +108,38 @@ export class ArticlesService {
     return article;
   }
 
-  async create(dto: CreateArticleDto, tenantId: string) {
-    const trimmedCode = dto.code.trim();
-    const trimmedName = dto.name.trim();
-
-    // 1. Validar unicidad de código
-    const existingCode = await this.prisma.article.findFirst({
+  async findByCode(code: string, tenantId: string) {
+    const trimmedCode = code.trim();
+    const article = await this.prisma.article.findFirst({
       where: {
         tenantId,
         code: { equals: trimmedCode, mode: 'insensitive' },
       },
+      include: {
+        category: {
+          select: { id: true, name: true, seed: true },
+        },
+        participants: {
+          include: {
+            entity: {
+              select: { id: true, code: true, name: true, status: true },
+            },
+          },
+        },
+      },
     });
-    if (existingCode) {
-      throw new ConflictException(
-        `Ya existe un artículo con el código "${trimmedCode}"`,
-      );
+
+    if (!article) {
+      throw new NotFoundException(`Artículo con código "${trimmedCode}" no encontrado`);
     }
 
-    // 2. Validar existencia de categoría en el tenant
+    return article;
+  }
+
+  async create(dto: CreateArticleDto, tenantId: string) {
+    const trimmedName = dto.name.trim();
+
+    // 1. Validar existencia de categoría en el tenant
     const category = await this.prisma.articleCategory.findFirst({
       where: { id: dto.categoryId, tenantId },
     });
@@ -135,7 +149,7 @@ export class ArticlesService {
       );
     }
 
-    // 3. Validar participantes y regla de suma <= 100%
+    // 2. Validar participantes y regla de suma <= 100%
     this.validateParticipants(dto.participants);
 
     if (dto.participants && dto.participants.length > 0) {
@@ -151,12 +165,55 @@ export class ArticlesService {
       }
     }
 
-    // 4. Crear artículo y participantes en transacción atómica
+    // 3. Crear artículo y participantes en transacción atómica con consecutivo
     return this.prisma.$transaction(async (tx) => {
+      let finalCode = dto.code?.trim();
+
+      if (finalCode) {
+        // Si el usuario especificó un código manual, validar unicidad
+        const existingCode = await tx.article.findFirst({
+          where: {
+            tenantId,
+            code: { equals: finalCode, mode: 'insensitive' },
+          },
+        });
+        if (existingCode) {
+          throw new ConflictException(
+            `Ya existe un artículo con el código "${finalCode}"`,
+          );
+        }
+      } else {
+        // Consecutivo atómico por categoría con incremento atómico
+        const updatedCategory = await tx.articleCategory.update({
+          where: { id: dto.categoryId },
+          data: { currentSequence: { increment: 1 } },
+        });
+
+        const prefix = updatedCategory.seed || 'CAT';
+        let candidateCode = `${prefix}-${String(updatedCategory.currentSequence).padStart(3, '0')}`;
+
+        let collision = await tx.article.findFirst({
+          where: { tenantId, code: candidateCode },
+        });
+
+        while (collision) {
+          const bumped = await tx.articleCategory.update({
+            where: { id: dto.categoryId },
+            data: { currentSequence: { increment: 1 } },
+          });
+          candidateCode = `${prefix}-${String(bumped.currentSequence).padStart(3, '0')}`;
+          collision = await tx.article.findFirst({
+            where: { tenantId, code: candidateCode },
+          });
+        }
+
+        finalCode = candidateCode;
+      }
+
       const article = await tx.article.create({
         data: {
           tenantId,
-          code: trimmedCode,
+          code: finalCode,
           name: trimmedName,
           categoryId: dto.categoryId,
           price1: new Prisma.Decimal(dto.price1),
@@ -184,7 +241,7 @@ export class ArticlesService {
             : undefined,
         },
         include: {
-          category: { select: { id: true, name: true } },
+          category: { select: { id: true, name: true, seed: true } },
           participants: {
             include: {
               entity: {

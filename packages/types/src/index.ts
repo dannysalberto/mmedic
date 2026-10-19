@@ -158,16 +158,20 @@ export interface ArticleCategory {
   id: string;
   tenantId?: string;
   name: string;
+  seed: string;
+  currentSequence: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateCategoryDto {
   name: string;
+  seed?: string;
 }
 
 export interface UpdateCategoryDto {
   name?: string;
+  seed?: string;
 }
 
 export interface CategoryWithStats extends ArticleCategory {
@@ -259,7 +263,7 @@ export interface Article {
 }
 
 export interface CreateArticleDto {
-  code: string;
+  code?: string;
   name: string;
   categoryId: string;
   price1: number;

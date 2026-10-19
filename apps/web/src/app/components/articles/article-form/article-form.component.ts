@@ -9,7 +9,8 @@ import {
   ParticipantsTableComponent,
   ParticipantRow,
 } from '../participants-table/participants-table.component';
-import { ArticleCategory } from '@mmedic/types';
+import { ArticleSearchModalComponent } from '../article-search-modal/article-search-modal.component';
+import { Article, ArticleCategory } from '@mmedic/types';
 import { HeaderComponent } from '../../header/header.component';
 
 @Component({
@@ -22,6 +23,7 @@ import { HeaderComponent } from '../../header/header.component';
     HeaderComponent,
     CategoryComboboxComponent,
     ParticipantsTableComponent,
+    ArticleSearchModalComponent,
   ],
   templateUrl: './article-form.component.html',
   styleUrls: ['./article-form.component.css'],
@@ -37,6 +39,7 @@ export class ArticleFormComponent implements OnInit {
   readonly code = signal<string>('');
   readonly name = signal<string>('');
   readonly categoryId = signal<string>('');
+  readonly categorySeed = signal<string>('');
   readonly price1 = signal<number | null>(null);
   readonly price2 = signal<number | null>(null);
   readonly price3 = signal<number | null>(null);
@@ -50,11 +53,19 @@ export class ArticleFormComponent implements OnInit {
   // State
   readonly isLoading = signal<boolean>(false);
   readonly isSaving = signal<boolean>(false);
+  readonly isSearchingCode = signal<boolean>(false);
+  readonly isSearchModalOpen = signal<boolean>(false);
   readonly errorMessage = signal<string>('');
   readonly successMessage = signal<string>('');
 
   // Computeds
   readonly isEditMode = computed(() => !!this.articleId());
+
+  readonly codePlaceholder = computed(() => {
+    if (this.isEditMode()) return 'Ej: CONS-001';
+    if (this.categorySeed()) return `${this.categorySeed()}-??? (Automático)`;
+    return 'Selecciona categoría para correlativo o escribe para buscar';
+  });
 
   readonly totalPercentage = computed(() => {
     return this.participantRows().reduce(
@@ -64,7 +75,7 @@ export class ArticleFormComponent implements OnInit {
   });
 
   readonly isFormValid = computed(() => {
-    const hasCode = !!this.code().trim();
+    const hasCode = this.isEditMode() ? !!this.code().trim() : true;
     const hasName = !!this.name().trim();
     const hasCat = !!this.categoryId();
     const hasP1 = this.price1() !== null && Number(this.price1()) >= 0;
@@ -86,28 +97,7 @@ export class ArticleFormComponent implements OnInit {
       next: (res) => {
         this.isLoading.set(false);
         if (res.success && res.data) {
-          const a = res.data;
-          this.code.set(a.code);
-          this.name.set(a.name);
-          this.categoryId.set(a.categoryId);
-          this.price1.set(Number(a.price1));
-          this.price2.set(a.price2 !== null ? Number(a.price2) : null);
-          this.price3.set(a.price3 !== null ? Number(a.price3) : null);
-          this.price4.set(a.price4 !== null ? Number(a.price4) : null);
-          this.isActive.set(a.isActive);
-          this.appliesVat.set(a.appliesVat ?? false);
-
-          if (a.participants?.length) {
-            this.participantRows.set(
-              a.participants.map((p) => ({
-                entityId: p.entityId,
-                code: p.entity?.code || '',
-                name: p.entity?.name || '',
-                status: p.entity?.status || 'ACTIVE',
-                percentage: Number(p.percentage),
-              }))
-            );
-          }
+          this.populateArticle(res.data);
         }
       },
       error: (err) => {
@@ -119,8 +109,100 @@ export class ArticleFormComponent implements OnInit {
     });
   }
 
+  populateArticle(a: Article): void {
+    this.articleId.set(a.id);
+    this.code.set(a.code);
+    this.name.set(a.name);
+    this.categoryId.set(a.categoryId);
+    this.categorySeed.set(a.category?.seed || '');
+    this.price1.set(Number(a.price1));
+    this.price2.set(a.price2 !== null && a.price2 !== undefined ? Number(a.price2) : null);
+    this.price3.set(a.price3 !== null && a.price3 !== undefined ? Number(a.price3) : null);
+    this.price4.set(a.price4 !== null && a.price4 !== undefined ? Number(a.price4) : null);
+    this.isActive.set(a.isActive);
+    this.appliesVat.set(a.appliesVat ?? false);
+
+    if (a.participants?.length) {
+      this.participantRows.set(
+        a.participants.map((p) => ({
+          entityId: p.entityId,
+          code: p.entity?.code || '',
+          name: p.entity?.name || '',
+          status: p.entity?.status || 'ACTIVE',
+          percentage: Number(p.percentage),
+        }))
+      );
+    } else {
+      this.participantRows.set([]);
+    }
+  }
+
   onCategorySelected(category: ArticleCategory): void {
     this.categoryId.set(category.id);
+    this.categorySeed.set(category.seed || '');
+  }
+
+  searchByCode(): void {
+    const codeVal = this.code().trim();
+    if (!codeVal) return;
+
+    this.isSearchingCode.set(true);
+    this.articlesService.getArticleByCode(codeVal).subscribe({
+      next: (res) => {
+        this.isSearchingCode.set(false);
+        if (res.success && res.data) {
+          this.populateArticle(res.data);
+          this.notificationService.success(
+            'Modo Edición Activado',
+            `Se cargaron los datos del artículo existente '${res.data.code}'.`
+          );
+        }
+      },
+      error: (err) => {
+        this.isSearchingCode.set(false);
+        if (err.status === 404 && !this.isEditMode()) {
+          // El código está disponible para crear
+          this.notificationService.info(
+            'Código libre',
+            `El código '${codeVal}' no existe en el catálogo y está disponible.`
+          );
+        }
+      },
+    });
+  }
+
+  openSearchModal(): void {
+    this.isSearchModalOpen.set(true);
+  }
+
+  closeSearchModal(): void {
+    this.isSearchModalOpen.set(false);
+  }
+
+  onArticleSelectedFromModal(article: Article): void {
+    this.populateArticle(article);
+    this.notificationService.success(
+      'Artículo seleccionado',
+      `Modo edición activado para '${article.code}'.`
+    );
+  }
+
+  resetToNew(): void {
+    this.articleId.set(null);
+    this.code.set('');
+    this.name.set('');
+    this.categoryId.set('');
+    this.categorySeed.set('');
+    this.price1.set(null);
+    this.price2.set(null);
+    this.price3.set(null);
+    this.price4.set(null);
+    this.isActive.set(true);
+    this.appliesVat.set(false);
+    this.participantRows.set([]);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.notificationService.info('Modo Nuevo Registro', 'Formulario listo para crear un nuevo artículo.');
   }
 
   onSubmit(): void {
@@ -137,8 +219,8 @@ export class ArticleFormComponent implements OnInit {
         percentage: Number(r.percentage),
       }));
 
-    const payload = {
-      code: this.code().trim(),
+    const rawCode = this.code().trim();
+    const payload: any = {
       name: this.name().trim(),
       categoryId: this.categoryId(),
       price1: Number(this.price1()),
@@ -149,10 +231,15 @@ export class ArticleFormComponent implements OnInit {
       participants: validParticipants,
     };
 
+    if (rawCode) {
+      payload.code = rawCode;
+    }
+
     const isEditing = this.isEditMode();
     const request$ = isEditing
       ? this.articlesService.updateArticle(this.articleId()!, {
           ...payload,
+          code: rawCode,
           isActive: this.isActive(),
         })
       : this.articlesService.createArticle(payload);
@@ -167,11 +254,10 @@ export class ArticleFormComponent implements OnInit {
               'Los cambios se han guardado exitosamente.'
             );
             this.successMessage.set('Cambios guardados correctamente.');
-            // Permanecer en pantalla según la Constitución (Sección 5.4)
           } else {
             this.notificationService.success(
               'Artículo creado',
-              'El nuevo artículo se ha registrado exitosamente.'
+              `El artículo se ha registrado con código ${res.data?.code || ''}.`
             );
             this.router.navigate(['/articles']);
           }
@@ -186,4 +272,3 @@ export class ArticleFormComponent implements OnInit {
     });
   }
 }
-

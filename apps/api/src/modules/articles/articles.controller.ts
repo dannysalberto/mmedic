@@ -20,6 +20,13 @@ export class ArticlesController {
     return { success: true, data, timestamp: new Date().toISOString() };
   }
 
+  @Get('code/:code')
+  @ApiOperation({ summary: 'Buscar artículo por código exacto en la organización' })
+  async findByCode(@Param('code') code: string, @Request() req: any): Promise<ApiResponse<any>> {
+    const data = await this.articlesService.findByCode(code, req.tenantContext?.tenantId || 'default-clinic');
+    return { success: true, data, timestamp: new Date().toISOString() };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener artículo por ID' })
   async findOne(@Param('id') id: string, @Request() req: any): Promise<ApiResponse<any>> {

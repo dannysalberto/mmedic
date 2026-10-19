@@ -3,7 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import express, { Express } from 'express';
+import express = require('express');
+import type { Express } from 'express';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
@@ -59,6 +60,8 @@ export async function createNestServer(expressInstance: Express) {
     .addTag('Health', 'Estado de salud del servicio y base de datos')
     .addTag('Patients', 'Gestión de pacientes e historial médico')
     .addTag('Appointments', 'Gestión y agenda de citas médicas')
+    .addTag('Articles', 'Catálogo de artículos, numeración consecutiva atómica y búsqueda rápida')
+    .addTag('Article Categories', 'Gestión de categorías con prefijo semilla para series correlativas')
     .addBearerAuth()
     .build();
 

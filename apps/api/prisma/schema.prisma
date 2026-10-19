@@ -204,16 +204,19 @@ model MedicalRecord {
 }
 
 model ArticleCategory {
-  id        String   @id @default(uuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String
+  seed            String   @default("CAT")
+  currentSequence Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   articles Article[]
 
   @@unique([tenantId, name])
+  @@unique([tenantId, seed])
   @@index([tenantId])
   @@map("article_categories")
 }

@@ -10,21 +10,27 @@ data class ApiResponse<T>(
 data class ArticleCategory(
     val id: String,
     val name: String,
+    val seed: String = "CAT",
+    val currentSequence: Int = 0,
     val createdAt: String? = null,
     val updatedAt: String? = null
 )
 
 data class CreateCategoryDto(
-    val name: String
+    val name: String,
+    val seed: String? = null
 )
 
 data class UpdateCategoryDto(
-    val name: String? = null
+    val name: String? = null,
+    val seed: String? = null
 )
 
 data class CategoryWithStats(
     val id: String,
     val name: String,
+    val seed: String = "CAT",
+    val currentSequence: Int = 0,
     val articlesCount: Int = 0,
     val createdAt: String? = null,
     val updatedAt: String? = null
@@ -118,7 +124,7 @@ data class Article(
 )
 
 data class CreateArticleDto(
-    val code: String,
+    val code: String? = null,
     val name: String,
     val categoryId: String,
     val price1: Double,

@@ -29,11 +29,11 @@ export class ArticleParticipantInputDto {
 }
 
 export class CreateArticleDto {
-  @ApiProperty({ description: 'Código único del artículo', example: 'CONS-001' })
-  @IsNotEmpty({ message: 'El código de artículo es obligatorio' })
+  @ApiPropertyOptional({ description: 'Código único del artículo (opcional: si se omite, se genera automáticamente)', example: 'CONS-001' })
+  @IsOptional()
   @IsString({ message: 'El código debe ser texto' })
   @Length(1, 50, { message: 'El código debe tener entre 1 y 50 caracteres' })
-  code: string;
+  code?: string;
 
   @ApiProperty({ description: 'Nombre o descripción del artículo', example: 'Consulta Médica General' })
   @IsNotEmpty({ message: 'El nombre del artículo es obligatorio' })

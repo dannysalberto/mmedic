@@ -15,9 +15,10 @@ import com.mmedic.ui.theme.DarkPrimary
 @Composable
 fun CategoryDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String) -> Unit
+    onConfirm: (name: String, seed: String?) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
+    var seed by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
@@ -47,11 +48,22 @@ fun CategoryDialog(
                         name = it
                         if (it.isNotBlank()) error = null
                     },
-                    label = { Text("Nombre de la categoría") },
+                    label = { Text("Nombre de la categoría *") },
                     placeholder = { Text("Ej: Consultas, Laboratorio") },
                     singleLine = true,
                     isError = error != null,
                     supportingText = error?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = seed,
+                    onValueChange = { seed = it.uppercase() },
+                    label = { Text("Semilla / Prefijo (Opcional, 2-6 letras)") },
+                    placeholder = { Text("Ej: CONS, EXAM") },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -62,7 +74,7 @@ fun CategoryDialog(
                     if (name.isBlank()) {
                         error = "El nombre de la categoría es obligatorio"
                     } else {
-                        onConfirm(name.trim())
+                        onConfirm(name.trim(), seed.trim().ifBlank { null })
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = DarkPrimary)

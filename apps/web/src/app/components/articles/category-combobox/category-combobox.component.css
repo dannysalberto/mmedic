@@ -1,3 +1,13 @@
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+:host(.is-open) {
+  z-index: 60;
+}
+
 .combobox-container {
   position: relative;
   width: 100%;
@@ -60,7 +70,7 @@
   top: calc(100% + var(--space-xs));
   left: 0;
   right: 0;
-  z-index: 50;
+  z-index: 100;
   padding: var(--space-sm);
   max-height: 320px;
   display: flex;
@@ -68,7 +78,7 @@
   background-color: #121d30;
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
 }
 
 .search-box {

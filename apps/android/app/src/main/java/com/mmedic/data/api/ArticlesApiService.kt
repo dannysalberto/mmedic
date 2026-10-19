@@ -14,6 +14,9 @@ interface ArticlesApiService {
     @GET("api/v1/articles/{id}")
     suspend fun getArticleById(@Path("id") id: String): ApiResponse<Article>
 
+    @GET("api/v1/articles/code/{code}")
+    suspend fun getArticleByCode(@Path("code") code: String): ApiResponse<Article>
+
     @POST("api/v1/articles")
     suspend fun createArticle(@Body dto: CreateArticleDto): ApiResponse<Article>
 

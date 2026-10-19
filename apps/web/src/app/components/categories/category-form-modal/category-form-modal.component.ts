@@ -24,6 +24,7 @@ export class CategoryFormModalComponent {
   readonly closeModal = output<void>();
 
   readonly name = signal<string>('');
+  readonly seed = signal<string>('');
   readonly isSubmitting = signal<boolean>(false);
   readonly errorMessage = signal<string>('');
 
@@ -32,6 +33,7 @@ export class CategoryFormModalComponent {
       const category = this.categoryToEdit();
       if (category) {
         this.name.set(category.name);
+        this.seed.set(category.seed || '');
       } else {
         this.resetForm();
       }
@@ -40,6 +42,7 @@ export class CategoryFormModalComponent {
 
   resetForm(): void {
     this.name.set('');
+    this.seed.set('');
     this.errorMessage.set('');
     this.isSubmitting.set(false);
   }
@@ -51,8 +54,13 @@ export class CategoryFormModalComponent {
 
   onSubmit(): void {
     const nameVal = this.name().trim();
+    const seedVal = this.seed().trim().toUpperCase();
     if (!nameVal) {
       this.errorMessage.set('El nombre de la categoría es obligatorio');
+      return;
+    }
+    if (seedVal && !/^[A-Z0-9]{2,6}$/.test(seedVal)) {
+      this.errorMessage.set('La semilla o prefijo debe tener entre 2 y 6 letras o números en mayúscula');
       return;
     }
 
@@ -62,8 +70,8 @@ export class CategoryFormModalComponent {
     const isEdit = !!this.categoryToEdit();
 
     const request$ = isEdit
-      ? this.categoriesService.update(this.categoryToEdit()!.id, { name: nameVal })
-      : this.categoriesService.create({ name: nameVal });
+      ? this.categoriesService.update(this.categoryToEdit()!.id, { name: nameVal, seed: seedVal || undefined })
+      : this.categoriesService.create({ name: nameVal, seed: seedVal || undefined });
 
     request$.subscribe({
       next: (res) => {
